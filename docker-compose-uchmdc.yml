@@ -1,0 +1,23 @@
+version: '3'
+services:
+  usercenter:
+    image: 10.253.254.36/yuncetest/usercenter:2.0
+    restart: always
+    container_name: "uc_test"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  datacache:
+    image: 10.253.254.36/yuncetest/datacache:2.0
+    restart: always
+    container_name: "dc_test"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  healthmaster:
+    image: 10.253.254.36/yuncetest/healthmaster:2.0
+    restart: always
+    container_name: "hm_test"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 

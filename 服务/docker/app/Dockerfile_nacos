@@ -1,0 +1,8 @@
+FROM java:8
+MAINTAINER ZXX <1139835238@qq.com>
+ENV TZ=Asia/Shanghai
+ADD nacos /nacos
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+RUN chmod 777 -R /nacos
+EXPOSE 8848
+ENTRYPOINT ["sh","/nacos/bin/startup.sh","-m","standalone","&"]

@@ -1,0 +1,79 @@
+#!/bin/bash
+#set -e
+# 脚本功能:构建后,删除节点上的容器、镜像,修改配置文件并重启容器
+
+# 服务名
+image="zzpay"
+
+# 生产服务节点地址
+ycIP=(10.253.90.{150..160})
+
+# 测试服务节点地址
+yctsIP=(10.253.90.81)  # .{80,82,83,79}{81..83} #
+
+# --------*****---------- #
+
+# 服务节点上的镜像名
+imageName=$(cat /root/.jenkins/workspace/yunce_$image/yunce-cloud/yunce-cloud-$image/pom.xml|grep "[[:space:]]<image.name>10.253.254.36"|awk -F ">" '{print $2}'|awk -F "<" '{print $1}')
+if [ ! -n "$imageName" ]; then echo "节点上没有需要清理的容器,5秒后退出";sleep 5s;exit; fi
+
+# 项目名
+project=$(echo $imageName|awk -F "/" '{print $2}')
+
+# 容器新版本
+container=${imageName##*/}
+
+echo "项目名:" $project
+echo "镜像名:" $image
+
+# 停止容器,删除镜像并重启容器
+function create_container() {
+ssh root@$1 '
+	cnFile="/home/app/dkco.yml"
+    img=$(grep "/'${container%%:*}':" ${cnFile}|awk -F "/" \{print\ \$NF\})
+    echo "旧版本:" $img
+    echo "新版本:" '$container'
+
+    if [ ! "$img" = "'$container'" -o ! -n "$img" ]
+    then
+        echo "版本不同,更新配置文件……"
+        sed -i "s/\/'${container%%:*}':.*$/\/'$container'/" ${cnFile}
+        sed -i "s/\"'${container%%:*}'_.*$/\"'${container%%:*}'_'${container##*:}'\"/" ${cnFile}
+    else
+        echo "版本相同,无须更改配置."
+    fi
+
+    imgVer=$(docker ps -a|grep $img)
+    if [ -n "$imgVer" -a -n "$img" ]
+    then
+        example=$(echo $img|tr -t ":" "_")
+        echo "停止并删除容器、镜像."
+        docker stop $example && docker rm $example
+        wait
+        docker rmi '$imageName'
+        echo "'$1'上已删除$img镜像容器,重新docker-compose创建。"
+    else
+        echo "'$1'上没有找到用'$container'镜像运行的容器,直接docker-compose创建。"
+    fi
+    docker-compose -f ${cnFile} up -d $(echo $img|cut -d":" -f 1)
+'
+}
+
+
+if [ "$project" = "yunce" ]
+then
+    for (( sIP=0; sIP<${#ycIP[*]}; sIP++ ))
+    do
+        echo "处理"${ycIP[sIP]}    
+        create_container ${ycIP[sIP]}
+    done
+elif [ "$project" = "yuncetest" ]
+then
+    for (( sIP=0; sIP<${#yctsIP[*]}; sIP++ ))
+    do
+        echo "处理"${yctsIP[sIP]}    
+        create_container ${yctsIP[sIP]}
+    done
+fi
+
+exit

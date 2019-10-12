@@ -1,0 +1,23 @@
+version: '3'
+services:
+  warns:
+    image: 10.253.254.36/yunce/warn:6.0
+    restart: always
+    container_name: "warn_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  datastorage:
+    image: 10.253.254.36/yunce/datastorage:6.0
+    restart: always
+    container_name: "dt_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  search:
+    image: 10.253.254.36/yunce/search:6.0
+    restart: always
+    container_name: "sr_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 

@@ -1,0 +1,15 @@
+限流规则：
+    resource: 资源名称
+	controller_behavior：0 直接拒绝 ，1 warn up, 2 排队等待
+	count：限流阈值
+	grade：0 并发线程数 1 qps
+	limitApp：限制应用名称
+	STRTEGY: 关联策略， 0 直接，1 关联 2 链路
+	maxQueueingTimeMs：排队等待时间 ms
+	clusterModel:false 集群模式
+	clusterConfig:{
+		thresholdType:0 单机均摊 1 总阈值
+	}
+    refresource:关联资源名
+	warnUpPeriodSec: 秒 暖启动持续时长
+	

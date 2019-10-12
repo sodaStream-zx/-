@@ -1,0 +1,23 @@
+version: '3'
+services:
+  healthrisk:
+    image: 10.253.254.36/yunce/healthrisk:6.0
+    restart: always
+    container_name: "hr_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  es:
+    image: 10.253.254.36/yunce/es:6.0
+    restart: always
+    container_name: "es_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  zzpay:
+    image: 10.253.254.36/yunce/zzpay:6.0
+    restart: always
+    container_name: "zz_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 

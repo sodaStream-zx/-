@@ -1,0 +1,1906 @@
+一、MySQL数据库概述
+略。
+
+
+二、MySQL管理工具
+略。
+
+
+三、数据库基本操作
+	1. show engines;(\g|\G)
+	查看数据库引擎
+	
+	2. show variables like '%storage_engine%';
+	查看当前数据库引擎
+	
+	3. 创建数据库
+	create database db_name [[DEFAULT] CHARACTER SET charset_name
+							[DEFAULT] COLLATE collation_name];
+	如果指定了charset_name而没有指定collation_name，那么采用charset_name和collation_name的默认校对规
+	则。
+	一般创建数据库的时候需要判断该数据库是否存在：create tablebase IF NOT EXISTS db_name;
+	
+	4. show character set;
+	查看可用字符集
+	show collation [like 'pattern'];
+	查看校对列表，like提供查看什么样
+	
+	5. 查看所有数据库
+	show databases;
+	
+	6. 查看数据库详细信息
+	show create database 数据库名称;(\G)
+	
+	7. 修改数据库
+	对于引擎为MyISAM的数据库，在Workbench下只要修改当前数据库DATA目录下的库名文件夹就可以了。
+	但如果存储引擎是InnoDB，是无法修改数据库名称的。虽然InnoDB存储引擎无法修改默认数据库名称，但是可
+	以对字符集合校对规则进行设置。例：
+	ALTER DATABASE mylove CHARACTER SET gb2312;
+	
+	8. 删除数据库
+	drop database 数据库名称;
+	
+	9. 查看当前数据库
+	select database();
+	
+	10. 选择数据库
+	use databasename;
+	在DOS窗口中可以通过mysql命令选择数据库，这时只需在提供连接参数之后指定数据库名称：
+	shell> mysql -h host -u user -p study
+	Enter password:******
+	
+	11. 查看当前数据库的所有表
+	show tables;
+	
+	12. InnoDB存储引擎
+	InnoDB支持外键，其他的存储引擎都不支持。
+	优势：提供良好的事务管理、崩溃修复能力和并发控制。
+	劣势：读写效率稍差，占用的数据空间相对较大。
+	如果对事物的完整性要求比较高，要求实现并发通知，那么选择InnoDB存储引擎比较有优势。如果需要频繁地
+	进行更新和删除操作，也可以选择该存储引擎，因为该引擎可以实现事物的提交和回滚。
+	
+	13. MyISAM存储引擎
+	提供高速的存储于检索和全文搜索能力。该存储引擎插入数据快，但是空间和内存的使用效率低。如果表主要
+	是使用于插入新记录和读出记录，那么选择MyISAM存储引擎可以实现处理的高效率。
+	
+	14. MEMORY存储引擎
+	这种存储引擎提供“内存中”表，该存储引擎的所有数据都存储在内存中，数据的处理速度很快，但是安全性不
+	高。如果需要很快的读写速度，对数据的安全性要求较低，可以选择这种存储引擎。MEMORY存储引擎对表的大
+	小有要求，不能是太大的表，因此，这类数据库只适用于相对较小的数据库表。
+	
+	
+四、数据表的操作
+	MySQL实际上支持5种不同的表类型，分别是BDB、HEAP、ISAM、MERGE和MyISAM。
+	其中BDB单独属于一类，称为事务安全型，其余的表类型属于非事务安全型。
+	A. ISAM数据表已经过时。
+	B. MyISAM数据表
+		这是5.4版本之前默认使用的数据表类型。
+		优点如下：
+		如果主机操作系统支持大尺寸文件，数据表长度就能够很大，就能容纳更多的数据。
+		数据表内容独立于硬件也就是说可以把数据表在机器之间任意复制。
+		提高了索引方面的功能。
+		提供了良好的索引键压缩效果。
+		AUTO_INCREMENT能力加强。
+		改进了对数据表完整性检查机制。
+		支持进行FULLTEXT全文本搜索。
+	C. Merge数据表
+	Merge是一种把相同结构的MyISAM数据表结构组织为一个逻辑单元的方法。
+	D. HEAP数据表
+	HEAP是一种使用内存的数据表，而且对各个数据行的长度固定，这两个特性使得这种类型数据表的检索速度非
+	常快。作为一种临时性的表，HEAP在某些情况下很有用。
+	E. BDB数据表
+	这种数据表支持事务处理机制，具有良好的并发性能。
+	F. InnoDB数据表
+		新特性：
+		支持事务处理机制。
+		崩溃后能够立刻恢复。
+		支持外键功能，包括级联删除。
+		具有并发功能。 
+	
+	1. 字段根据其常用类型可分为三种：数值类型、字符串类型和时间日期类型。
+	
+	2. 整数型数据类型主要有5种
+	类型			大小		范围（有符号）
+	tinyint			1B			(-128, 127)
+	smallint		2B			(-32768, 32767)
+	mediumint		3B			(-8 388 608, 8388 607)
+	int(integer)	4B			(-2 147 483 648, 2 147 483 647)
+	bigint			8B			(-9 233 372 036 854 775 808, 9 233 372 036 854 775 807)
+	如果指定一个字段的类型为INT(6)，就可以保证所包含的数字少于6个的值，从数据库中检索出来时能够自动地
+	用空格填充。若某个字段需要存储的值在其许可范围之外，MySQL数据库会根据允许范围最接近它的一端截短后
+	再进行存储。
+	整型字段有下面两种修饰。
+	A. unsigned（未签署）修饰符规定只保存正值。
+	B. zerofill（零填充）修饰符规定0（不是空格）可以替代输出的值。使用这个修饰符可以阻止MySQL存负值，
+	如库存字段是不可能小于0的，但该字段不是由用户填写，而是由系统运行产生。	
+		
+	3. 浮点型数据类型主要有3种
+	类型		大小
+	float		4B
+	double		8B
+	decimal		decimal(M, D)如果M>D，为M+2长度，否则为D+2长度。
+	这些类型都带有附加参数，一个显示宽度，一个显示小数点。比如float(7, 3)规定显示的值不会超过7个数字，
+	小数点后面有3个数字。
+	对于小数点后面的位数超过允许范围的值，MySQL会自动将它四舍五入为最接近它的值，再插入它。
+	decimal类型用于精度要求非常高的计算中，忽略decimal数据类型的精度和计数方法修饰符会使MySQL数据库把
+	所有标识为这个数据类型的字段精度设置为10，计算方法设置为0。
+	unsigned和zerofill修饰符也可用于float、double和decimal数据类型，效果同INT数据类型相同。
+	
+	4. 字符串数据类型主要有10种
+	char 		0-255B			定长字符串
+	varchar 	0-255B 			变长字符串
+	tinyblob 	0-255B 			不超过255个字符的二进制字符串
+	tinytext 	0-255B 			短文本字符串
+	
+	blob 		0-65535B 		二进制形式的长文本数据
+	text 		0-65535B 		长文本数据
+	mediumblob 	0-16777215B 	二进制形式中等长度文本数据
+	mediumtext 	0-16777215B 	中等长度文本数据
+	logngblob 	0-4294967295B 	二进制形式极大文本数据
+	longtext 	0-4294967295B 	极大文本数据
+	A. char和varchar
+	char用于定长字符串，必须在圆括号内用一个修饰符来指定其大小，这个大小的范围是0~255。比长度大的值将
+	被截断，比指定小的值将被用空格填充。
+	varchar为变长字符串类型，也必须带有0~255的长度修饰符。它和char的不同点如下：
+	● char把这个长度视为值的大小，长度不足的情况下使用空格补足。
+	● varchar类型把它视为最大值并且只使用存储字符串实际需要的长度来存储（增加一个额外字节来存储字符串
+	本身的长度）。
+	额外地，char和varchar类型都可以使用binary修饰符来修饰，作用是当用于比较运算时，这个修饰符使它们以
+	二进制方式参与运算。
+	B. text和blob
+	blob区分大小写，而text不区分大小写。大小修饰符不用于各种blob和text子类型。
+	
+	5. 时间数据类型有5种
+	类型		大小	格式
+	date 		3		YYYY-MM-DD
+	time 		3		HH:MM:SS
+	year 		1		YYYY
+	datetime 	8		YYY-MM-DD HH:MM:SS
+	timestamp 	8 		YYYYMMDDHHMMSS
+	
+	6. enum类型
+	enum类型只允许在集合中取得一个值，其作用类似于单选项，常用于处理相互排斥的数据。
+	enum类型在系统内部可以存储为数字，并且从1开始用数字做索引。一个enum类型最多可以
+	包含65535个元素，其中一个元素被MySQL数据库保留，用来存储错误信息，这个错误信息
+	用索引0或者一个空字符串表示。
+	
+	7. set类型
+	set类型可以从预定义的集合中取得任意数量的值，其作用类似于复选框。
+	一个set类型最多可以包含64项元素。
+	
+	8. 在enum和set类型的字段中，查找包含空字符串或二进制为0的行，可以找出enum或set类型字段
+	中非法记录。
+	与enum类型相同的是，任何试图在set类型字段中插入非预定义的值都会使MySQL数据库插入一个空字符串。
+	
+	9. 控制台创建表
+	use databasename;create table 表名(字段1 字段1类型 字段1约束, 字段2 字段2类型 字段2约束...);
+	create table 数据库名称.表名(字段1 字段1类型 字段1约束, 字段2 字段2类型 字段2约束...);
+	
+	10. 查看表结构
+	desc(describe) table_name;
+    show table status from db_name where name='table_name';
+    有人认为下面的不对，理由是如果mysql没有启动对应的引擎，如InnoDB，那么会使用MyISAM。
+	show create table table_name(\G); 可以查看到存储引擎和字符编码
+	\G后面不需要再加引号，否则会出现no query specified错误。
+	在显示出来的列中，extra显示的是该列的附加信息，比如auto_increment等。
+
+	11. 查看表数据
+	select * from table_name;
+	
+	12. 在控制台删除表数据（删除表的全部数据，不删除表结构）
+	delete from table_name[where <condition>];
+	truncate table table_name;
+	delete语句可以返回被删除的记录数，而truncate返回0。另外地，如果表中有自增字段，使用truncate
+	table和没有where子句的delete删除所有记录后，这个自增字段将起始值恢复成1，如果不想这样做的话，
+	可以在delete语句中加上永真的where，即where 1或者where true。
+	DELETE可以指定删除记录，但是truncate是不行的，所以truncate的执行速度比delete快。和标准的SQL
+	不同，delete支持order by和limit子句：
+	delete from users where name = 'Mike' order by id limit 6;
+	
+	13. 删除表
+	drop table table_name;
+	
+	14. 修改表名
+	alter table 旧表名 rename [to] 新表名；
+	修改表名并不修改表的结构。
+	
+	15. 字段类型修改
+	alter table 表名 modify 字段名 数据类型;
+	其中“表名”指要修改数据类型的字段所在表的名称，“字段名”指需要修改的字段，
+	“字段类型”指修改后字段的新数据类型。
+	
+	16. 修改字段名
+	alter table 表名 change 旧字段名 新字段名 数据类型 [约束];
+	这个也可以用来修改类型，将旧字段名和新字段名设置为一样即可。
+	
+	17. 添加字段
+	alter table 表名 add 新字段名 数据类型 [约束条件] [first | after 已存在的字段名];
+	
+	18. 删除字段
+	alter table 表名 drop 字段名;
+	
+	19. 字段位置修改
+	alter table 表名 modify 字段1 数据类型 first | after 字段2;
+	first后面不能跟字段，first就是表示移到第一行，否则会报错。
+	
+	20. 控制台向表中添加数据
+	insert into语句指出需要添加数据的表；使用values语句指出需要添加的数据。
+	值得注意的是，可以不用指出全部表的列而只要部分，如果在表名（books）后面什么都
+	不写表示需要插入每个项目。
+	
+	21. 将查询结果插入到表中
+	基本语法格式如下：
+	insert into table_name1 (column_list1) select (column_list2) from table_name2 
+	where (condition);
+	
+	操作总结：
+	修改表名：rename
+	修改位置、类型：modify
+	修改字段名：change
+	添加字段：add
+	删除字段：drop
+	
+	22. 更新数据（update set）
+	基本语法结构如下：
+	update table_name set column_name1 = value1, column_name2 = value2, ..., column_name3 = valuen
+	where (condition);
+	update person set age = 15, name = 'LiMing' where id = 10;
+	
+	
+五、字段约束
+	1. 单字段主键只需在创建语句中，字段的数据类型后面添加primary key语句即可；
+	复合主键需要在字段创建语句后，添加primary key（字段列表）语句，在key关键字后的括号中，
+	写入需要设置为主键的字段列表，只用逗号隔开。
+	
+	2. 现有表good，表中没有设置主键。现将表中的字段gid设置为主键，语法如下：
+	alter table good add primary key(gid);
+	另一种语法是：
+	alter table good modify gid int primary key;
+	
+	3. 对于已经设置了主键的表，主键的修改不能够直接进行，必须先删除原有主键，再重新设置主键。
+	主键的删除只是删除了指定字段或字段组的主键约束，并不能删除字段或字段组，一个表中只有一个主键。
+	现在有一张表book，它已经设置了bnum和typeid为主键。现将表中的主键删除，将字段bnum修改为主键。
+	alter table book drop primary key;
+	alter table book add primary key(bnum);
+	
+	3. 外键的作用
+	让数据库自己通过外键来保证数据的完整性和一致性；
+	能够增加数据库表关系的可读性。
+	
+	4. 外键定义需要遵循下列几种情况
+	所有表必须是InnoDB型，它们不能有是临时表。因为在MySQL中只有InnoDB类型的表才支持外键；
+	所有要建立外键的字段必须有相似类型的数据类型，其中数字的长度及是否有符号位必须相同，而字符的长
+    度则可以不同；
+	对于非InnoDB表，foreign key子句会被忽略掉。
+	
+	5. 在控制台添加表字段的外键约束，其语法如下：
+	① RESTRICT拒绝删除或者更新父表。指定RESTRICT（或者NO ACTION）和忽略ON DELETE或者ON UPDATE选项
+    的效果是一样的。
+	② CASCADE从父表中删除或更新对应的行，同时自动的删除或更新子表中匹配行。
+	③ SET NULL从父表中删除或更新对应的行，同时将子表中的外键列设为空。这些在外键列 没有被设为NOT
+    NULL时才有效。
+	④ SET DEFAULTInnoDB目前不支持。
+	⑤ NO ACTION默认动作，InnoDB拒绝删除或者更新父表。
+    外键约束使用最多的情况无外乎：
+    父表更新时子表也更新，父表删除时如果子表有匹配的项，删除失败；（在外键定义中，我们使用ON UPDATE
+    CASCADE ON DELETE RESTRICT）。
+    父表更新时子表也更新，父表删除时子表匹配项也删除。（使用ON UPDATE CASCADE ON DELETE CASCADE）。
+	
+	alter table tablename
+	add [constraint 外键名] foreign key [id] (index_col_name, ...)
+	references tbl_name (index_col_name, ...)
+	[ON DELETE {CASCADE | SET NULL | NO ACTION | RESTRICT}]
+	[ON UPDATE {CASCADE | SET NULL | NO ACTION | RESTRICT}]
+    父表试图update或者delete任何子表中存在或匹配的外键值，最终动作取决于外键约束定义中的on update
+    和on delete选项。
+	现有课程表curriculum，其中有任课教师字段ctid，对应教师信息表teachers中的tid字段。为课程表添加
+	外键，引用teachers中的tid字段，代码及其执行结果如下：
+	alter table curriculum add constraint ctid foreign key(ctid)
+	references teachers(tid)
+	on delete restrict
+	on update cascade;
+	
+	[CONSTRAINT 外键名] FOREIGN KEY(需要成为外键的字段)
+	REFERENCES 关联的目标表 (目标表的目标字段)
+	[ON DELETE {RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT}]
+	[ON UPDATE {RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT}]
+	该语法可以在 CREATE TABLE 和 ALTER TABLE 时使用，如果不指定外键名，MYSQL会自动
+	生成一个名字。
+	还可以在外键上建立索引：
+	index repo_id(repo_id), foreign key(repo_id) references repo_table(repo_id);
+	
+	6. 创建外键的时候需要注意以下几点。
+	创建外键时，定义的外键名不能加引号，如add constraint 'fk'是错误的；
+	字段名及其对应的数据表名称不能有误；
+	字段类型必须对应；
+	检查字段的约束，除了主键约束和外键约束以外，其他约束必须一致；
+	检查字符集，为了迁移和使用的方便，尽量使用utf8字符集。
+	例：
+	
+	7. 删除外键
+	alter table table_name drop foreign key 外键名; 外键名不加引号！！
+	一个表中的外键可能不止一个，上述语句可删除指定的一个外键，删除多个外键可重复执行上述语句。
+	当删除一张表时，如果这张表有外键，那么它是不能被直接删除的，首先需要删除它的外键，然后才能
+	删除这张表。
+	
+	8. 非空约束限制该字段中的内容不能为空，但可以是空白字符或0。
+	
+	9. 空和非空约束的修改较为简单，可以使用修改字段数据类型的语句来直接修改其非空约束。
+	例如：
+	alter table worker modify wid int null;
+	修改wid字段可以为空。
+	
+	10. 对于现有的表字段默认值约束的添加，使用SET关键字：
+	alter table table_name 列名称 set default 默认值数据;
+	
+	11. 已经设置了默认值的字段，是无法直接修改其默认数据的。修改默认值，首先需要将该字段原有的默认值
+	删除，再添加新的默认值。删除默认值的语法如下：
+	alter table table_name 字段名 drop default;
+	
+	12. 创建唯一性约束有两种方式
+	第一是在创建表时在字段的后面使用unique关键字；
+	二是在所有字段定义完后使用如下语句：
+	[constraint <约束名>] unique(<字段名>);  约束名不用引号括上
+	
+	13. 删除唯一性约束。
+	首先查看需要删除唯一约束的index：
+	show index from table_name;
+	查询到需要删除的唯一约束名之后：
+	alter table table_name drop index index_name;
+	
+	14. 添加唯一性约束
+	alter table table_name add unique(字段字段列表);
+	
+	15. 自增约束的注意项目
+	auto_increment是数据列的一种属性，只适用于整数型数据列；
+	设置auto_increment属性的数据列应该是一个正数序列，所以应该把该数据列声明为unsigned，这样序列的编号
+	个数就可以增加一倍；
+	auto_increment数据列必须有唯一约束，以避免序号重复；
+	MySQL表中只能有一个auto_increment字段；
+	自增字段必须被定义为键，如主键、外键；（所以不能同时添加主键又设为自增）
+	auto_increment数据列必须具备not null属性；
+	auto_increment数据列序号最大值受到该列的数据类型约束；
+	当进行全表删除数据时，auto_increment会从1重新开始编号；
+	进行全表数据删除操作时，MySQL数据库实际是做了这样的优化操作，即先把数据表里的所有数据和约束删除，
+	然后重建数据表；
+	要重新排列现有的序列编号，最简单的方法是先删除该列，再重建该列，MySQL数据库会重新生成连续的编号序列。
+	删除自增约束：
+	alter table table_name modify column column_name [约束条件];
+	
+	16. 定义自增约束只需在字段的数据类型后添加auto_increment即可。
+	若需要定义自增约束的初始值，可添加auto_increment=初始值（这个添加在table_name的那个括号外）。
+	create table xxx(...)auto_increment=100;
+	初始值默认为1开始。
+	
+	17. 例
+	创建职工表worker，其中主键定义为自增约束，其创建语句：
+	create table worker(
+		wid int primary key auto_increment,
+		wname varchar(20),
+		wsex varchar(20)
+	)auto_increment = 100;
+	
+	18. 添加自增约束
+	现有图书馆信息表book，表中有1条数据，其中bid为主键，其数据值为1.为主键添加自增约束：
+	alter table book modify column bid int not null auto_increment;
+	对于已经有数据的表，其已有数据的最大值将影响自增约束的初始值。
+	
+	19. 在MySQL数据库中，一个字段的所有约束都以通过约束名称删除
+	alter table table_name drop index 约束名;
+	
+	auto_increment、not null，添加使用modify；
+	primary key、foreign key、unique、default添加使用add。
+	
+	
+六、数据库记录基本操作  page186
+	select语法：（简版）
+	select 字段 from 表
+	where 条件,
+	group by 分组条件,
+	having 分组结果过滤条件,
+	order by 排序条件,
+	lmiit 查询数量条件;
+	
+	1. 查询所有字段
+	查询所有字段有两种方式：一是列出表中的所有字段；二是使用通配符“*”进行查询。
+	假如现在有一张图书馆管理员的数据表bookmanager，其中有7个字段。
+	select * from bookmanager;
+	select 字段1, 字段2, ... from bookmanager;（可以查询部分字段）
+	
+	2. 根据条件查询
+	select 查询字段 from table_name where 条件表达式;
+	
+	3. where子句查询条件
+	比较			=、<、<=、>、>=、!=、!>、!<、<>
+	指定范围		between and、not between and
+	指定集合		in、not in
+	匹配字符		like、not like
+	是否为空值		is null、is not null
+	多个查询条件	and、or
+	
+	4. 通过比较符号查询
+	select * from bookmanager where manId='1';
+	
+	5. 通过between and实现查询
+	这个条件是闭区间，包括开始值和结束值。
+	where 字段名 [not] between 取值1 and 取值2;
+	between and的取值1和取值2表示取值范围大于等于取值1且小于等于取值2。
+	select bookInfoPrice, bookInfoIsbn where bookInfoPrice between 20 and 30;
+	
+	6. 通过and实现查询
+	条件表达式1 and 条件表达式2 [... and 条件表达式n]
+	查询bookinfo表中bookInfoSheId字段的值是4，并且bookInfoPrice字段的值不在20-30的数据。
+	select * from bookinfo where bookInfoSheId = 4 and bookInfoPrice not between 20 and 30;
+	
+	7. 通过or实现查询
+	与and关键字一样，通过or也可以用来联合多个条件进行查询。
+	条件表达式1 or 条件表达式2 [... or 条件表达式n]
+	需要注意的是，and的优先级比or高，因此and和or一起使用时先对and两边的操作数进行操作，再与or
+	中的操作数结合。
+	
+	8. 通过in实现查询
+	[not] in (元素1, 元素2, ..., 元素n)
+	
+	9. 通过like实现查询
+	[not] like '字符串'
+	字符串表示用来匹配的字符串，它必须添加单引号或者双引号，字符串参数的值可以是一个完整的字符串，
+	也可以是包含百分号（%）或者下划线（_）的通配字符。
+	说明如下：
+		A. 百分号：可以代表任意长度的字符串，长度可以为0。例如a%n表示以字母a开头，以字母n结束的
+		任意长度的字符串。
+		B. 下划线：只能代表单个字符。例如，a_n表示以a开头，以字母n结尾的3个字符。其中下划线可以
+		代表任意一个字符。
+	like与等号这种等价的匹配效果只对一个完整的字符串有效，如果匹配的字符串中包含了通配符，like与
+	等号就不能够进行替换了。
+		
+	10. 空值查询
+	is null查询与空字符串是有区别的，例如，下面insert语句插入两条记录：
+	insert into my_table(phone) values(null);
+	insert into my_table(phone) values('');
+	第一句插入的是一个空值，表示什么都没有；第二条插入的是一个空字符串，其实这是有值的，只是空字符
+	串我们看不见。
+	当my_table表中的一个字段中有三个null值，其余的不是空字符串就是其他字符串，那么查询这个字段并加上
+	is null的查询条件时，结果只能查询到三条。
+	空值查询不能将is替换为=，如果替换了将查询不到任何结果。
+	
+	11. 分组查询
+	group by实现分组查询，它可以将查询结果按某个字段或多个字段进行分组，指定字段的值相同的为一组。
+	group by 字段名 [having 条件表达式] [with rollup]
+	group by关键字通常和集合函数一起使用，例如max()、min()、count()、sum()、avg()。
+	上述语法中“字段名”是指按照该字段的值进行分组，指定多个字段时中间使用逗号进行分割。having表达式
+	和with rollup都是可选的，前者用来限制分组后的显示，满足条件表达式的结果会被显示出来；后者会在
+	所有记录的最后加上一条，该记录是上面所有记录的总和。
+	SELECT s_id, COUNT(*) Total from fruits GROUP BY s_id WITH ROLLUP;
+	
+	12. 单独使用group by关键字，只显示一个分组的一条记录。
+	SELECT s_id, COUNT(*) as total FROM fruits group by s_id;
+	group by后可以跟多个字段实现分组查询。分组层次从左至右，即先按第一个字段分组，然后在第一个字段值
+	相同的记录中，再根据第二个字段的值进行分组，依次类推。
+	SELECT * FROM fruits GROUP BY s_id, f_name;
+	查询记录先按照s_id进行分组，再对f_name字段按不同的取值进行分组。
+	
+	13. group_concat()
+	group by可以与group_concat()函数一起使用，这样每个分组中指定字段的值都将显示出来。
+	SELECT s_id, count(*) total,GROUP_CONCAT(f_name) as Names from fruits GROUP BY s_id;
+	
+	14. having查询
+	group by之后可以跟having语句，满足having指定条件的表达式时，其结果将会被显示出来，否则将被排除掉，
+	不进行显示。一般情况下，having语句会和group by一起使用。
+	SELECT s_id, GROUP_CONCAT(f_name) Names FROM fruits GROUP BY s_id HAVING COUNT(f_name) > 1;
+	having条件表达式可以限制查询结果的显示情况，虽然它与where条件查询都是用来限制显示的，但是它们所
+	起到的作用是不一样的。where条件作用于表或者视图，是表和视图的查询条件；而having指定的查询作用于
+	分组后的记录，用于选择满足条件的分组。
+	
+	15. 排序查询
+	order by 字段名1 [asc | desc], 字段名2 [asc | desc], ..., 字段名n [asc | desc]
+	asc表示按升序排列；desc按降序排列。其中asc是默认行为。
+	对于空值来说，空代表最小值。
+	在对多列进行排序的时候，首先排序的第一列必须有相同的列值，才会对第二列进行排序。如果第一列
+	数据中所有值都是唯一的，将不再对第二列进行排序。
+	当使用rollup时，不能同时使用order by子句进行结果排序，即rollup和order by总是互斥的。
+	
+	16. limit限制查询数量
+		A. 使用limit使用指定初始位置
+		limit 查询记录数量
+		如果查询记录数量小于或者等于查询结果的总数量，这时将会从第一条记录开始，显示指定条数的记录。
+		如果查询记录数量大于查询结果的总数量，数据库会直接显示查询出来的所有记录。
+		通过limit指定只显示两条记录：
+		SELECT * from fruits LIMIT 4;
+		SELECT * from fruits LIMIT 4, 3;
+		
+		B. 指定初始位置
+		limit可以指定初始位置，指定从哪条记录开始显示，并且可以指定显示多少条记录：
+		limit 初始位置, 查询记录数量
+		第一条记录开始显示，则初始位置为0，依此类推。
+		
+	17. 避免重复查询
+	select distinct 字段名称;
+	
+	18. 查询集合函数
+	MySQL中常用的结合函数包括COUNT()、AVG()、SUM()、MAX()和MIN()。
+		A. count()函数统计数据表中包含的记录行的总数，或者根据查询结果返回列中包含的数据行数。
+		count(*)计算表中总的行数，不管某列有数值或者为空值。
+		count(字段名)计算指定列下总的行数，计算时将忽略空值的行。
+		直接查询全部的记录数：
+		select count(*) 总数 from fruits;
+		
+		B. avg()函数通过计算返回的行数的每一行数据的和，求得指定列数据的平均值。
+		avg()函数使用时，其参数为要计算的列名称，如果要得到多个列的多个平均值，则需要在每一列上使用它。
+		查询平均价格：
+		select avg(bookInfoPrice) from bookinfo;
+		使用select语句查询并显示不同类型图书的平均价格，其中avg()函数计算平均价格，as为平均价格重新
+		指定名称，group by完成分组查询：
+		select bookInfoTypeId, avg(bookInforPrice) as '平均价格' from bookinfo group by bookInfoTypeId;
+		
+		B. sum()函数是一个求综合的函数，返回指定列值的总和。
+		sum()函数在计算时，忽略列值为NULL的行。
+		select sum(bookInfoPrice) as '图书总价格' from bookinfo;
+		
+		C. max()函数和min()函数用法一样，都是返回指定列中的最大（小）值。
+		select bookInfoTypeId, max(bookInfoPrice) as '最高价格', min(bookInfoPrice) as '最低价格'
+		from bookinfo group by bookInfoTypeId;
+		
+	########################################################################################
+	#多表查询
+	########################################################################################
+	19. 连接查询
+		MySQL不支持full join，只有union。如果要使用union的话，被union的表结构要一样才能并在一起。
+		A. 使用inner join on查询（内连接）
+		select 字段名列表 from 表名1 inner join 表名2 on 表名1.字段名 = 表名2.字段名;
+		一般会省略inner关键字。
+		假设查询表中存在相同的字段，或者表名称过长时，使用“表名.字段名”时会显得非常繁琐。这时，
+		可以使用as为表或字段名重新命名。
+		select a.字段1, b.字段1 from 表名1 as a inner join 表名2 as b on a.字段名 = b.字段名;
+		例：select *  from user_id a inner join user_profile b on a.id = b.id;
+		
+		B. 在from之后查询
+		select 字段名列表 from 表1， 表2 where 表1.字段名=表2.字段名;
+		select a.字段名1,b.字段名1 from 表1 as a,表2 as b where a.字段名=b.字段名;
+		例：select * from user_id a, user_profile b where a.id = b.id;
+		INNER JOIN语法是ANSI SQL的标准规范，使用INNER JOIN连接语法能够确保不会忘记连接条件，而且，
+		WHERE子句在某些时候会影响查询的性能。
+		
+		C. 左连接（外连接）
+		select 字段表 from 表1 left|right [outer] 表2 on 表1.字段=表2.字段;
+		select a.字段1, b.字段1 from 表1 as a left|right [outer] 表2 as b on 
+		表1.字段=表2.字段;
+		左外连接查询时可以查询出“表1”所指表中的所有记录，而“表2”所指的表中只能查询出匹配的
+		记录。
+		例：select a.id id , ifnull(b.name, 'N/A') name from user_id a left join user_profile
+		b on a.id = b.id; 
+		查询在一个相关表中不存在的数据，先查出表1中存在而表2中不存在的记录：
+		例：select count(*) from user_id left join user_profile on user_id.id = 
+		user_profile.id where user_profile.id is null;
+	
+		D. 右连接（外连接）
+		右外连接查询时可以查询出“表2”所指表中的所有记录，而“表1”所指的表中只能查询出匹配的
+		记录。
+		例：select * from user_id right join user_profile on user_id.id=user_profile.id;
+		这个就是以表2为基准了，和左连接异曲同工。
+		
+		E. 自连接
+		自连接是一种特殊的内连接，它是指相互连接的表在物理上为同一张表，但可以在逻辑上分为两张表。
+		SELECT f1.f_id, f1.f_name FROM fruits f1, fruits f2 WHERE f1.s_id = f2.s_id AND 
+		f2.f_id = 'a1';
+		
+	20. 子查询
+	子查询指一个查询语句嵌套在另一个查询语句内部的查询。
+		A. 带any、some关键字的子查询
+		any和some关键字是同义词。
+		any关键字接在一个比较操作符的后面，表示若与子查询返回的任何值比较为true，则返回true。
+		select num1 from tbl1 where num1 > any(select num2 from tbl2);
+		只要大于num2列的任意一个数即为符合查找条件。
+		
+		B. 带all关键字的子查询
+		all需要满足所有内层查询的条件。
+		select num1 from tbl1 where num1 > all(select num2 from tbl2);
+		
+		C. 带exists关键字的子查询
+		exists关键字后面的参数是一个任意的子查询，系统对子查询进行运算以判断它是否返回行，如果
+		至少返回一行，那么exists的结果为true，此时查询语句将进行查询。
+		查询suppliers表中是否存在s_id=107的供应商，如果存在，则查询fruits表中记录：
+		select * from fruits where exists(select s_name from suppliers where s_id = 107);
+		not exists的查询结果与exists相反。
+		
+		D. 带in关键字的子查询
+		in关键字进行子查询时，内层查询语句仅仅返回一个数据列，这个数据列里的值将提供给外层查询
+		语句进行比较操作。
+		select c_id from orders where o_num in 
+		(select o_num from orderitems where f_id = 'c0');
+		not in的意思和in相反。
+		注：子查询的功能也可以通过连接查询完成，但是子查询使得MySQL代码更容易阅读和编写。
+		
+		E. 带比较运算符的子查询
+		子查询时还可以使用其他的比较运算符，如“<”、“<=”等。
+		SELECT s_id, f_name FROM fruits WHERE s_id = (SELECT s1.s_id FROM suppliers AS s1.s_city
+		= 'Tianjin');
+		
+	21. 合并查询结果
+	利用union关键字，可以给出多条select语句，并将它们的结果组合成单个结果集。合并时，两个表对应的
+	列数和数据类型必须相同。各个select语句之间使用union或union all关键字分隔。union不使用关键字
+	all，执行的时候删除重复的记录，所有返回的行都是唯一的；使用关键字all的作用是不删除重复行也不对
+	结果进行自动排序。基本语法格式如下：
+	select column ... from table1
+	union [all]
+	select column ... from table2;
+	查询所有价格小于9的水果信息，查询s_id等于101和103所有的水果信息：
+	select s_id, f_name, f_price from fruits where f_price < 9.0
+	union all
+	select s_id, f_name, f_price from fruits where s_id in (101, 103);
+		
+	22. 使用正则表达式查询
+	MySQL使用regexp关键字指定表达式在字符匹配模式。
+	在fruits表中，查询f_name以字母b开头的记录：
+	select * from fruits where f_name REGEXP '^b';
+	LIKE运算符也可以匹配指定的字符串，但与REGEXP不同，LIKE匹配的字符串如果在文本中间出现，则找不到
+	它，相应的行也不会返回。而REGEXP是可以找到的。
+	
+
+七、索引
+	1. 介绍
+	索引是对数据库表中一列或多列的值进行排序的一种结构，使用索引可提高数据库中特定数据的查询速度。
+	MySQL有两种：BTREE和HASH。MyISAM和InnoDB只支持BTREE；MEMORY/HEAP两个都支持。
+	举一个例子：
+	create table testhash(
+		fname varchar(50) not null,
+		lname varchar(50) not null,
+		key using hash(fname)
+	)engine = memory;
+	
+	HASH索引的限制：
+		A. hash索引在任何时候都不能避免表扫描。
+		hash索引是将索引键通过hash运算之后，将hash运算结果的hash值和所对应的行指针信息存放于一个
+		hash表中，由于不同索引键存在相同hash值，所以即使满足某个hash键值的数据的记录条数，也无法
+		从hash索引中直接完成查询，还是要通过访问表中的实际数据进行相应的比较，并得到相应的结果。
+		B. 不能使用hash索引排序。
+		C. hash索引不能利用部分索引查询。
+		对于组合索引，hash索引在计算hash值的时候是组合索引键合并后再一起计算hash值，而不是单独计算
+		hash值，所以通过组合索引的前面一个或几个索引键进行查询的时候，hash索引也无法被利用。
+		D. hash索引只支持等值比较，例如使用=、in()和<=>。对于where price > 100并不能加速查询。
+		E. hash索引遇到大量hash值相等的情况后性能并不一定就比BTREE索引高。对于选择性比较低的索引
+		键，如果创建hash索引，那么将会存在大量记录指针信息存于同一个hash值相关联，这样要定位某一
+		条记录时就会非常麻烦，会浪费多次表数据访问，而造成整体性能低下。
+	
+	优点：
+		A. 通过创建唯一索引，可以保证数据库表中每一行数据的唯一性。
+		B. 可以大大加快数据的查询速度，这也是创建索引的最主要的原因。
+		C. 在实现数据的参考完整性方面，可以加速表和表之间的连接。
+		D. 在使用分组和排序子句进行数据查询时，也可以显著减少查询中分组和排序的时间。
+	缺点：
+		A. 创建索引和维护索引要耗费时间，并且随着数据量的增加所耗费的时间也会增加。
+		B. 索引需要占磁盘空间，除了数据表占据数据空间之外，每一个索引还要占一定的物理空间，如果有
+		大量的所以，索引文件可能比数据文件更快达到最大文件尺寸。
+		C. 对表中的数据进行增加、删除和修改的时候，索引也要动态的维护，这样就降低了数据的维护速度。
+		
+	分类：
+		A. 普通索引和唯一索引
+			普通索引是MySQL中的基本索引类型，允许在定义索引的列中插入重复值和空值。
+			唯一索引，索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。主键
+			索引是一种特殊的唯一索引，不允许有空值。
+		B. 单列索引和组合索引
+			单列索引即一个索引只包含单个列，一个可以有多个单列索引。
+			组合索引指在表的多个字段组合上创建的索引，只有在查询条件中使用了这些字段的左边字段时，
+			索引才会被使用。使用组合索引时遵循最左前缀集合。
+			假如一个组合索引有id、name和age三个字段构成，索引中按id/name/age的顺序存放，索引可以搜
+			索下面字段组合：（id, name, age）、（id, name）、（id, age）或者id，如果列不构成索引最
+			左面的前缀，MySQL不能使用局部索引，如（age）或者（name, age）组合则不能使用索引查询。
+			必须要包含id的查询才会用到索引。
+		C. 全文索引——只有MyISAM存储引擎支持
+			全文索引类型为fulltext，在定义索引的列上支持值的全文查找，允许在这些索引列中插入重复值
+			和空值。全文索引只能在char、varchar或者text类型的列上创建。
+			在数据量较大的时候，现将数据放入一个没有全局索引的表中，然后再用CREATE INDEX创建
+			FULLTEXT索引，要比先为一张表建立FULLTEXT然后再将数据写入的速度快很多。
+			全文索引并不是和MyISAM一起诞生的，它的出现时为了解决WHERE name LIKE '%word%'这类针对文
+			本模糊查询效率较低的问题。在没有全文索引之前，这样一个查询语句时要进行遍历数据表操作
+			的，可见，在数据量较大时是极其耗时的，如果没有异步I/O处理，进程将被挟持，很浪费时间。
+			全文索引的使用方法并不复杂：
+			创建ALTER TABLE table ADD FULLINDEX full_name('cname1'[,cname2...]);
+            也可以通过create index命令创建，或者是创建表的时候创建全文索引；
+            对于一个大数量级记录插入，向没有索引的表中插入数据后创建索引比向有索引的数据表中插入的
+            过程要快很多。
+			使用SELECT * FROM table WHERE MATCH(cname1[,cname2...]) AGAINST ('word' MODE);
+			其中， MODE为搜寻方式（IN BOOLEAN MODE ，IN NATURAL LANGUAGE MODE（默认） ，IN NATURAL 
+			LANGUAGE MODE WITH QUERY EXPANSION / WITH QUERY EXPANSION）。
+			这里有三种搜寻方式，简单地说就是，布尔模式，允许word里含一些特殊字符用于标记一些具体的
+			要求，如+表示一定要有，-表示一定没有，*表示通用匹配符；自然语言模式，就是简单的单词匹
+			配；含表达式的自然语言模式，就是先用自然语言模式处理，对返回的结果，再进行表达式匹配。
+			FULLTEXT索引是按照分词原理建立索引的。西文中，大部分为字母文字，分词可以很方便的按照空
+			格进行分割。但是很明显，中文不能按照这种方式进行分词，我们可以使用MySQL的中文分词插件
+			Mysqlcft，有了它，就可以对中文进行分词。
+            IN NATURAL LANGUAGE MODE
+            默认的搜索形式（不加任何搜索修饰符或者修饰符为IN NATURAL LANGUAGE MODE的情况）
+            对于搜索字符串中的字符都解析为正常的字符，没有特殊意义；
+            对屏蔽字符列表中的字符串进行过滤；
+            当记录的选择性超过50%的时候，通常被认为是不匹配；
+            返回记录按照记录的相关性进行排序显示
+            WITH QUERY EXPANSION
+            一种稍微复杂的搜索形式，实际上是进行了2次自然搜索，可以返回记录直接简介性关系的记录，修
+            饰词IN NATURAL LANGUAGE MODE WITH QUERY EXPANSION或者WITH QUERY EXPANSION modifier特点：
+            这种类型的搜素，实际上提供了一种间接的搜索功能，比如：我搜索某个词，而且返回的第一行中
+            却不包含搜索词中的任意字符串。可以根据第一次搜索结果的记录词进行第二次匹配，从而可能找
+            到一些间接关系的匹配记录。
+		D. 空间索引——只有MyISAM存储引擎支持（MySQL5.6.4以上InnoDB也支持）
+			空间索引是对空间数据类型的字段建立的索引，MySQL中的空间数据类型有4种，分别是：geometry、
+			point、linestring和polygon。MySQL使用spatial关键字进行拓展，使得能够用于创建正规索引类
+            似的语法创建空间索引。创建空间索引的列，必须将其声明为not null。
+        
+		
+	设计原则：
+		A. 索引并非越多越好，一个表中如果有大量的索引，不仅占用磁盘空间，而且会影响insert、delete、
+		update等语句的性能，因为当表中的数据更改的同时，索引也会进行调整和更新。
+		B. 避免对经常更新的表进行过多的索引，并且索引中的列尽可能地少。而对经常用于查询的字段应该
+		创建索引，但要避免添加不必要的字段。
+		C. 数据量小的表最好不要创建索引，由于数据较少，查询花费的时间可能比遍历索引的时间还要短，
+		索引可能不会产生优化效果。
+		D. 在条件表达式中经常用到的不同值较多的列上建立索引，在不同值少的列上不要建立索引。
+		E. 当唯一性是某种数据本身的特征时，指定唯一索引。使用唯一索引需能确保定义的列的数据完整性，
+		以提高查询速度。
+		F. 在频繁进行排序或分组（即进行group by或order by操作）的列上建立索引，如果待排序的列有多
+		个，可以在这些列上建立组合索引。
+        G. 如果对串列进行索引，应该指定一个前缀长度，只要有可能就应该这样做。例如，如果有一个
+        CHAR(200)的列，如果在前10个或者20个字符内，多数值是唯一的，那么就不要对整个列进行索引。对
+        前10个或者20个字符进行索引能够节省大量索引空间，也可能会使查询更快。
+		
+	2. 创建索引
+	MySQL支持多种方法创建索引：在创建表的定义语句create table中指定索引，使用alter table语句在存在
+	的表上创建索引或者使用create index语句在已存在的表上添加索引。
+		A. 创建表的时候创建索引
+		基本语法：
+		create table table_name [col_name data_type]
+		[unique | fulltext | spatial] [index | key] [index_name] (col_name [length])[asc | desc]
+		unique、fulltext和spatial为可选参数，分别表示唯一索引、全文索引和空间索引；index与key为同
+		义词，两者作用相同，用来指定创建索引；col_name为需要创建索引的字段列；index_name指定索引的
+		名称，为可选参数，如果不指定，MySQL默认col_name为索引值；length为可选参数，表示索引的长度，
+		只有字符串类型的字段才能指定索引长度。对于char和varchar列，只用一列的一部分就可以创建索引，
+		索引创建时，使用col_name(length)语法，对前缀编制索引，前缀包括每列值的前length个字符。
+		bolob和text列也可以编制索引，但是必须给出前缀长度。下面我们举一个例子：
+		create index part_of_name on customer(name(10));
+		因为多数名称的前10个字符通常不同，所以此索引不会比使用列的全名创建的索引速度慢很多。另外，
+		使用列的一部分创建索引可以使索引文件大大减小，从而节省空间，有可能提高insert等操作的速度；
+		asc和desc指定升序或者降序的索引值存储。
+		
+		创建普通索引，只是加快对数据的访问速度。
+		使用explain语句查看索引收正在使用：
+		explain select * from book where year_publication = 1990\G
+		看到possible_keys和key都是year_publication，查询时就使用了索引。
+		
+		创建唯一索引，索引列的值必须唯一，但允许有空值。
+		创建单列索引，某一个字段上创建索引。
+		创建组合索引，组合索引是在多个字段上创建一个索引。
+		创建全文索引，只有MyISAM存储引擎支持。
+		全文索引是个大型数据集，对于小的数据集，它的用处可能比较小。
+		索引总是对整个列进行，不支持局部（前缀）索引。
+		创建空间索引，空间索引必须在MyISAM类型的表中创建，且空间类型的字段必须为非空。
+		
+		B. 在已存在的表上创建索引
+		alter table创建索引的基本语法如下：
+		alter table table_name add [unique | fulltext | spatial] [index | key]
+		[index_name](col_name [length], ...) [asc | desc]
+		
+		create index创建索引的基本语法如下：
+		create [unique | fulltext | spatial] index index_name
+		on table_name(col_name[lengh], ...) [asc | desc]
+		
+	3. 删除索引
+		A. alter table删除索引的基本语法格式如下：
+		alter table table_name drop index index_name;
+		值得注意的是，auto_increment约束字段的唯一索引不能被删除。
+		
+		B. drop index删除索引的基本语法格式如下：
+		drop index index_index on table_name;
+		注：删除表的列时，如果要删除的列为索引的组成部分，则该列也会从索引中删除，如果组成
+		索引的所有列都被删除，则整个索引将被删除。
+    
+    4. 索引何时使用与不使用
+    MySQL何时使用索引：
+        A. 对一个键码使用>, >=, =, <, <=, IF NULL和BETWEEN
+        SELECT * FROM table_name WHERE key_part1=1 and key_part2 > 5; 
+        SELECT * FROM table_name WHERE key_part1 IS NULL; 
+        B. 当使用不以通配符开始的LIKE
+        SELECT * FROM table_name WHERE key_part1 LIKE 'jani%' 
+        C. 在进行连接时从另一个表中提取行时
+        SELECT * from t1,t2 where t1.col=t2.key_part 
+        D. 找出指定索引的MAX()或MIN()值
+        SELECT MIN(key_part2),MAX(key_part2) FROM table_name where key_part1=10 
+        E. 一个键码的前缀使用ORDER BY或GROUP BY
+        SELECT * FROM foo ORDER BY key_part1,key_part2,key_part3 
+        F. 在所有用在查询中的列是键码的一部分时间
+        SELECT key_part3 FROM table_name WHERE key_part1=1 
+    MySQL何时不使用索引：
+        A. 如果MySQL估计使用索引比全表扫描更慢，则不适用索引。
+        比如：列key_part1均匀的分布在1-100之间。下面的sql则不会使用索引：
+        select * from table_name where key_part1 > 1 and key_part1 <90;
+        B. 如果使用memory/heap表，并且where语句中不适用“=”进行索引，则不会使用索引。heap表只有在
+        “=”的条件下，才使用索引。
+        C. 用or分割开的条件，如果or左右两个条件中有一个列没有索引，则不会使用索引。
+        比如：select * from table_name where key1='a' or key2='b'；
+        如果在key1上有索引而在key2上没有索引，则该查询也不会走索引。
+        D. 复合索引，如果索引列不是复合索引的第一部分，则不使用索引（即不符合最左前缀）
+        比如：复合索引为(key1,key2) ，一下sql将不会使用索引：
+        select * from table_name where key2='b'；
+        E. 如果like是以‘%’开始的，则该列上的索引不会被使用。
+        比如：select * from table_name where key1 like '%a'；
+        F. 如果列为字符串，则where条件中必须将字符常量值加引号，否则即使该列上存在索引，也不会被
+        使用。
+        比如：select * from table_name where key1=1;如果key1列保存的是字符串，即使key1上有索引，
+        也不会被使用。
+		
+		
+八、存储过程和函数
+	1. 创建存储过程
+	基本语法格式：
+	create procedure sp_name([proc_parameter]) [characteristics ...] routine_body
+	sp_name为存储过程的名称；
+    proc_parameter为指定存储过程的参数列表，列表形式如下：
+	[in | out | inout] para_name type
+	in表示输入参数，out表示输出参数，inout既可以表示输入也可以表示输出；para_name表示参数名称；
+	type表示参数的类型，该类型可以是MySQL数据库中的任意类型。
+	characteristics指定存储过程的特性，有以下取值：
+	language sql：说明routine_body部分是由SQL语句组成的，当前系统支持的语言为SQL，SQL是language
+	特性的唯一值。
+	[not] deterministic：指明存储过程执行的结果是否正确。没有not表示结果是确定的。每次执行存储过
+	程时，相同的输入会得到相同的输出。有not表示结果是不确定的，相同的输入可能得到不同的输出，如
+	果没有指定任意一个值，默认有not。
+	{contains sql（默认） | no sql | reads sql data | modifies sql data}
+	上面四句分别表示：子程序包含SQL语句，但不包含读或写数据的语句；子程序中不包含SQL语句；子程序
+	中包含读数据的语句；子程序中包含写数据的语句。
+	sql security {definer | invoker}指明谁有权限来执行（definer：默认行为，定义者自己才能够执行；
+	invoker：调用者可以执行）
+	comment 'string'：注释
+	routine_body是SQL代码的内容，可以用begin...end来表示SQL代码的开始和结束。
+	
+	例：
+	mysql> delimiter //（有空格）
+	mysql> create procedure Proc()
+		-> begin
+		-> select * from fruits;
+		-> end//
+	delimiter //语句的作用是将MySQL的结束符设置为//，应该避免使用反斜杠（\）字符，反斜杠是MySQL
+	的转义字符。
+	
+	2. 创建存储函数
+	基本语法格式如下：
+	crate [aggregate] function func_name([func_parameter])
+		returns type
+	[characteristics ...]
+	begin
+	routine_body
+	end
+	aggregate指定创建的函数是普通的自定义函数还是aggregate函数。
+	func_name表示存储函数的名称；func_parameter为存储过程的参数列表，参数列表形式如下：
+	[in | out | inout] para_name type
+	它们的含义同存储过程一样。
+	returns type语句表示函数返回数据的类型；characteristics指定存储函数的特性，取值与创建存储过
+	程相同。
+	如果在存储函数中的return语句返回一个类型不同于函数的returns子句中指定类型的值，返回值将被强
+	制为恰当的类型。比如，如果一个函数返回一个enum或set值，但是return语句返回一个整数，对于set
+	成员集的相应的enum成员，从函数返回的值是字符串。
+	指定参数为in，out或者inout只对procedure是合法的。（function中总是默认为in参数）。returns子句
+	只能对function做指定，对函数而言这是强制的。它用来指定函数的返回类型，而且函数体必须包含一个
+	return value子句。
+	
+	例：
+	delimiter //
+	create function NameF() 
+	returns char(255)
+	return (select f_name from fruits where sid = 101);
+	//
+	
+	3. 变量
+	变量的作用范围是begin...end中。
+		A. 定义
+		declare var_name[, varname]... data_type[default value];
+		var_name为局部变量的名称。default value子句给变量提供一个默认值。值除了可以被声明为一个
+		常数之外，还可以被指定为一个表达式。如果没有default子句，初始值为NULL。
+		declare myparam int default 100;
+		
+		B. 赋值
+		set var_name = expr[, var_name = expr] ...;
+		declare var1, var2, var3 int;
+		set var1 = 10, var2 = 20;
+		set var3 = var1 + var2;
+		MySQL中还可以通过select .. into为一个或多个变量赋值：
+		select col_name[, ...] into var_name[, ...] table_expr;
+		这个select语法把选定的列直接存储到对应位置的变量。col_name表示字段名称；var_name表示定义
+		的变量名称；table_expr表示查询条件表达式，包括表名称和where子句。
+		
+		例：声明变量fruitname和fruitprice，通过select ... into语句查询指定记录并为变量赋值。
+		declare fruitname char(50);
+		declare fruitprice decimal(8, 2);
+		select f_name, f_price into fruitname, fruitprice
+		from fruits where f_id = 'a1';
+		
+	4. 定义条件
+	定义条件是事先处理程序执行过程中遇到的问题，处理程序定义了在遇到这些问题时应当采取的处理方
+	式，并且保证存储过程或函数在遇到警告或错误时能够继续执行。
+	定义条件使用declare语句，语法格式如下：
+	declare condition_name condition for [condition_type]
+	[condition_type]:
+		SQLSTATE[VALUE] sqlstate_value | mysql_error_code
+	condition_name表示条件的名称；condition_type表示条件的类型；sqlstate_value和mysql_error_code
+	都可以表示MySQL错误，sqlstate_value为长度为5的字符串类型错误代码，mysql_error_code为数值类型
+	错误代码。例如：error 1442(42000)中，sqlstate_value的值是42000，mysql_error_code的值是1442。
+	这个语句指定需要特殊处理的条件。它将一个名字和指定的错误条件关联起来。这个名字可以随后被用在
+	定义处理程序的declare handler语句中。
+	
+	例：定义error 1148(42000)错误，名称为command_not_allowed。
+	方法1：使用sqlstate_value
+	declare command_not_allowed condition for sqlstate '42000';
+	方法2：使用mysql_error_code
+	declare command_not_allowed condition for 1148
+	
+	5. 定义处理程序
+	语法格式如下：
+	declare handler_type handler for condition_value[,...] sp_statement
+	handler_type:
+		continue | exit | undo
+	condition_value:
+		sqlstate[value] sqlstate_value：包含5个字符的字符串错误值
+		| condition_name：表示DECLARE CONDITION定义的错误条件名称
+		| sqlwarning：匹配所有以01开头的SQLSTATE错误代码
+		| not found：匹配所有以02开头的SQLSTATE错误代码
+		| sqlexception：匹配所有没有被前两个捕获的SQLSTATE错误代码
+		| mysql_error_code：匹配数值类型错误代码
+	其中，handler_type为错误处理方式，参数取3个值：continue、exit和undo。continue表示遇到错误不
+	处理，继续执行；exit遇到错误马上退出；undo表示遇到错误后撤回之前的操作，MySQL中暂时不支持这
+	样的操作。
+	condition_value表示错误类型，取值如上。
+	sp_statement参数为程序语句段，表示在遇到定义的错误时，需要执行的存储过程或函数。
+	
+	@var_name表示用户变量，使用set语句为其赋值，用户变量与连接有关，一个客户端定义的变量不能被其
+	他客户端看到或使用。当客户端退出时，该客户端连接的所有变量将自动释放。
+	
+	6. 光标
+	查询语句可能返回多条记录，如果数据量非常大，需要在存储过程和存储函数中使用光标来逐条读取查询
+	结果集中的记录。应用程序可以根据需要滚动或浏览其中的数据。
+	声明：
+	declare cursor_name cursor for select_statement
+	cursor_name表示光标的名称；select_statement表示select语句的内容，返回其中一个用于创建光标的
+	结果集。
+	declare cursor_fruit cursor for select f_name, f_price from fruits;
+	打开光标：
+	open cursor_name{光标名称}
+	使用光标：
+	fetch cursor_name into var_name[, var_name] ... {参数名称}
+	cursor_name表示光标的名称；var_name表示将光标中的select语句查询出来的信息存入该参数中，
+	var_name必须在声明光标之前就定义好。
+	例：使用名称为cursor_fruit的光标，将查询出来的数据存入fruit_name和fruit_price这两个变量中。
+	fetch cursor_fruit into fruit_name, fruit_price;
+	关闭光标：
+	close cursor_name {光标名称}
+	注：MySQL中光标只能在存储过程和函数中使用。
+	
+	7. 流程控制的使用
+	流程控制语句用来根据条件控制语句的执行。MySQL中用来构造控制流程的语句有：if语句、case语句、
+	loop语句、while语句、leave语句、iterate语句、repeat语句。
+	每个流程中可能包含一个单独语句，或者是使用begin...end构造的符合语句，构造可以被嵌套。
+		A. IF语句
+		控制台下的IF语句：
+		IF(条件, 结果1, 结果2)
+		条件成立则返回结果1，否则结果2。
+		select f_id, if(f_id='a1', 'a1在查询结果中', 'a1不在查询结果中') as 
+		result from fruits where s_id=101;
+		存储过程和方法下的IF语句：
+		if语句包含多个条件判断，根据判断结果为true或者false执行相应的语句。语法格式如下：
+		IF expr_condition THEN statement_list
+			[ELSELF expr_condition THEN statement_list]...
+			[ELSE statement_list]
+		END IF
+		IF实现了一个基本的条件构造，如果expr_condition求值为真，则相应的SQL语句列表被执行；如果没
+		有expr_condition匹配，则ELSE子句里的语句列表执行。statement_list可以包括一个或多个语句。
+		
+		B. CASE语句
+		控制台下的CASE语句格式如下：
+		CASE 字段名称
+		WHEN 值1	THEN	结果1
+		WHEN 值2	THEN	结果2
+		WHEN 值n	THEN	结果n
+		ELSE 默认结果
+		END AS 字段别名
+		存储过程和函数下的CASE语句：
+		CASE是另一个进行条件判断的语句，该语句有2种语句格式，第一种格式如下：
+		CASE case_expr
+			WHEN when_value THEN statement_list
+			[WHEN when_value THEN statement_list]...
+			[ELSE statement_list]
+		END CASE
+		case_expr参数表示条件判断的表达式，决定了哪一个WHEN子句会被执行。
+		CASE语句的第二种格式如下：
+		CASE
+			WHEN expr_condition THEN statement_list
+			[WHEN expr_condition THEN statement_list]...
+			[ELSE statement_list]
+		END CASE
+		值得注意的是，这里的CASE语句不能有ELSE NULL语句。
+		
+		C. LOOP语句
+		LOOP只创建一个循环操作的过程，并不进行条件判断。LOOP内的语句一直重复执行直到循环退出，跳
+		出循环过程，使用LEAVE子句，LOOP语句的基本格式如下：
+		[loop_label:] LOOP
+			statement_list
+		END LOOP[loop_label]
+		loop_label表示LOOP语句的标注名称，该参数可以省略；statement_list表示需要循环执行的语句。
+		例：
+		DECLARE id INT DEFAULT 0;
+		add_loop: LOOP
+			SET id = id + 1;
+			IF id >= 10 THEN LEAVE add_loop;
+			END IF;
+		END LOOP add_loop;
+		
+		D. LEAVE语句
+		LEAVE语句用来退出任何被标注的流程控制构造，LEAVE基本格式如下：
+		LEAVE label
+		label参数表示循环的标志，LEAVE和BEGIN...END或循环一起被使用。
+		
+		E. ITERATE语句
+		ITERATE语句将执行顺序转到语句段开头处，语句基本格式如下：
+		ITERATE label
+		ITERATE只可以出现在LOOP、REPEAT和WHILE语句内。ITERATE语句必须跟在循环标志前面。
+		CREATE PROCEDURE doiterate()
+		BEGIN
+		DECLARE p1 INT DEFAULT 0;
+		my_loop: LOOP
+			SET p1 = p1 + 1
+			IF p1 < 10 THEN ITERATE my_loop;
+			ELSEIF p1 > 20 THEN LEAVE my_loop;
+			END IF;
+			SELECT 'p1 is between 10 and 20';
+		END LOOP my_loop;
+		END
+		p1小于10时，重复执行p1加1操作；p1大于等于10并且小于20时，打印消息“p1 is between and 20”；
+		当p1大于20时，退出循环。
+		
+		F. REPEAT语句
+		REPEAT语句创建一个带条件判断的循环过程，每次语句执行完毕后，会对条件表达式进行判断，如果
+		表达式为真，则循环结束；否则重复执行循环中的语句。基本格式如下：
+		[repeat_label:] REPEAT
+			statement_list
+		UNTIL expr_condition
+		END REPEAT [repeat_label]
+		repeat_label为REPEAT语句的标注名称，该参数可以省略。只有前一个存在，后面一个才能使用。如
+		果两者都存在，它们必须是相互匹配的；REPEAT语句内的语句或语句群被重复，直
+		至expr_conditon为真。
+		
+		G. WHILE语句
+		WHILE语句创建一个带条件判断的循环过程，与REPEAT不同，WHILE在执行语句时，先对指定表达式进
+		行判断，如果为真，则执行循环内的语句，否则退出循环。WHILE语句的基本格式如下：
+		[while_label:] WHILE expr_condition DO
+			statement_list
+		END WHILE [while_label]
+		while_label为WHILE语句的标注名称，只有前一个存在，后面一个才能使用。如果两者都存在，它们
+		必须是相互匹配的；expr_condition为进行判断的表达式，如果表达式结果为真，
+		WHILE语句内的语句群被执行，直至expr_condition为假，退出循环。
+		
+		H. LABELS标号
+		LABELS标号可用在REPEAT、WHILE或者LOOP语句前，语句标号只能在合法语句的前面使用。使用
+		LABELS可以跳出循环，使运行指令达到复合语句的最后一步。
+		
+	8. 调用存储过程和函数
+	存储过程通过CALL语句进行调用，语法如下：
+	CALL sp_name([parameter[,...]])
+	MySQL中存储函数的使用方法与MySQL内部函数的使用方法是一样的。
+	
+	9. 查看存储过程和函数
+	SHOW STATUS语句可以查看存储过程和函数的状态，基本语法结构如下：
+	SHOW {PROCEDURE | FUNCTION} STATUS {LIKE 'pattern'}
+	SHOW CREATE语句也可以查看存储过程和函数的状态，基本语法结构如下：
+	SHOW CREATE {PROCEDURE | FUNCTION} sp_name
+	
+	MySQL中存储过程和函数的信息存储在information_schema数据库下的Routines表中。可以通过查询该表
+	的记录来查询存储过程和函数的信息，基本语法形式如下：
+	SELECT * FROM information_schema.Routines where ROUTINE_NAME = 'sp_name' [AND ROUTINE_TYPE |
+	= 'FUNCTION' | 'PROCEDURE']
+	查询时要使用ROUTINE_NAME字段指定存储过程或函数的名称。如果有存储过程和存储函数名称相同，则需
+	要同时指定ROUTINE_TYPE字段表明查询的是哪种类型的存储程序。
+	
+	10. 修改存储过程和函数
+	ALTER {PROCEDURE | FUNCTION} sp_name [characteristic ...]
+	修改存储过程或函数语句与创建存储过程或函数语句中的参数基本是一样的。
+	
+	11. 删除存储过程和函数
+	DROP {PROCEDURE | FUNCTION} {IFEXISTS} sp_name
+	
+	12. 存储过程和存储函数的区别
+	本质上它们都是存储程序。函数只能通过return语句返回单个值或者表对象；而存储过程不允许执行
+	return，但是可以通过out参数返回多个值。函数限制比较多，不能用临时表，只能用表变量，还有一些
+	函数都不可用等等；而存储过程的限制相对就比较少。函数可以嵌入在SQL语句中使用，可以在SELECT语
+	句中作为查询语句的一个部分调用；而存储过程一般是作为一个独立的部分来执行。
+	
+	13. 其他值得关注的问题
+		A. 存储过程中文的问题
+		存储过程可能出现传入中文参数的情况，这个时候需要在定义存储过程的时，在后面加上character
+		set gbk，不然调用存储过程使用中文参数会出错。例：
+		CREATE PROCEDURE useinfo(IN u_name VARCHAR(50) character set gbk, OUT u_age INT)
+		B. 存储过程的参数不要与数据表中的字段名相同
+		在定义存储过程参数列表时，应注意把参数名与数据库表中的字段名区别开来，否则将出现无法预期
+		的结果。
+		C. 存储过程的互相调用
+		在存储过程中可以使用CALL语句调用其他存储过程，但是不能使用DROP语句删除其他存储过程。
+		D. 存储过程中的代码
+		MySQL还不提供对已存在的存储过程代码的修改，如果必须要修改存储过程，必须使用DROP语句删除
+		后，再重新编写代码，或者创建一个新的存储过程。
+		
+		
+九、视图
+	1. 视图概述
+	视图是一个虚拟表，是从数据库中一个或多个表导出来的表。视图还可以从已经存在的视图的基础上定
+	义。
+	视图一经定义便存储在数据库中，与其相对应的数据并没有像表那样在数据库中再存储一份，通过视图看
+	到的数据只是存放在基本表中的数据。对视图的操作与对表的操作一样，可以对其查询、修改和删除。当
+	对通过视图看到的数据进行修改时，相应的基本表的数据也要发生变化；同时，若基本表的数据发生变化，
+	则这种变化也可以自动反映到视图中。
+	
+	2. 创建视图
+	基本语法格式如下：
+	CREATE [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}]
+	VIEW view_name [(column_list)]
+	AS SELECT_statement
+	[WITH[CASCADED | LOCAL] | CHECK OPTION]]
+	其中，CREATE表示创建新的视图；REPLACE表示替换已经创建的视图；ALGORITHM表示视图选择的算法；
+	view_name为视图的名称，column_list为属性列；SELECT_statement表示SELECT语句；
+	WITH[CASCADED | LOCAL] | CHECK OPTION表示视图在更新时保证在视图的权限范围之内。
+	ALGORITHM的取值有三个，UNDEFINED表示MySQL将自动选择算法；MERGE表示将使用视图语句与视图定义合
+	并起来，使得视图定义的某一部分取代语句对应的部分；TEMPTABLE表示将视图的结果存入临时表，然后
+	用临时表来执行语句。
+	CASCADED与LOCAL为可选参数，CASCADED为默认值，表示更新视图时要满足所有相关视图和表的条件；
+	LOCAL表示更新视图时满足该视图本身定义的条件即可。
+	该语句要求具有针对视图的CREATE VIEW权限，以及针对由SELECT语句选择的每一列上的某些权限。对于
+	在SELECT语句中其他地方使用的列，必须具有SELECT权限。如果还有OR REPLACE子句，必须在视图上具有
+	DROP权限。
+	视图属于数据库。在默认情况下，将在当前数据库创建新视图。要想明确创建视图，创建时应将名称指定
+	为db_name.view_name。
+	
+	在单表上创建视图
+	CREATE TABLE t(quantity INT, price INT);
+	INSERT INTO t VALUES(3, 50);
+	CREATE VIEW view_t AS SELECT quantity, price, quantity * price FROM t;
+	默认情况下创建视图和基本表的字段是一样的，也可以通过指定视图字段名称来创建视图。
+	CREATE VIEW view_t2(qty, price, total) AS SELECT quantity, price, quantity * price FROM t;
+	
+	在多表上创建视图
+	CREATE TABLE student(
+	s_id INT,
+	name VARCHAR(40)
+	);
+	CREATE TABLE stu_info(
+		s_id INT,
+		glass VARCHAR(40),
+		addr VARCHAR(90)
+	);
+	INSERT INTO student VALUES(1, 'wanglin'), (2, 'gaoli'), (3, 'zhanghai');
+	INSERT INTO stu_info VALUES(1, 'wuban', 'henan'), (2, 'liuban', 'hebei'), 
+	(3, 'qiban', 'shandong');
+	#创建视图
+	CREATE VIEW stu_glass(id, name, glass) AS SELECT student.s_id, student.name, stu_info.glass
+	FROM student, stu_info WHERE student.s_id = stu_info.s_id;
+	
+	3. 查看视图
+	查看视图：
+	DESC 视图名;
+	SHOW TABLE STATUS LIKE '视图名'\G
+	SHOW CREATE VIEW 视图名\G	
+	另外地，在information_schema数据库下的views表中存储了所有视图的定义。通过对views表的查询，
+	可以查看数据库中所有视图的详细信息，如下：
+	SELECT * from information_schema.views where TABLE_NAME = 'view_name'\G
+	
+	4. 修改视图
+	MySQL中通过CREATE OR REPLACE VIEW语句和ALTER语句来修改视图。
+	CREATE OR REPLACE VIEW语句语法语句时和创建视图语句时一样的。当视图存在时，修改语句对视图进行
+	修改；当视图不存在时，创建视图。
+	ALTER [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}]
+	VIEW view_name [(column_list)]
+	AS SELECT_statement
+	[WITH[CASCADED | LOCAL] | CHECK OPTION]]
+	这个语法中的关键字和前面视图的关键字是一样的。
+	
+	5. 更新视图
+	视图是一个虚拟表，其中没有数据。通过视图更新的时候都是转到基本表上进行更新的，如果对视图增加
+	或者删除记录，实际上是对基本表增加或者删除记录。
+	UPDATE view_t SET quantity = 5;
+	INSERT INTO t VALUES(3, 5);
+	DELETE FROM view_t2 WHERE price = 5;
+	当视图包含有如下内容时，视图的更新操作将不能被执行：
+		A. 视图中不包含基表中被定义的非空的列。
+		B. 在定义视图的SELECT语句后的字段列表中使用了数学表达式。
+		C. 在定义视图的SELECT语句后的字段列表中使用了聚合函数。
+		D. 在定义视图的SELECT语句中使用了DISTINCT，UNION，TOP，GROUP BY或HAVING子句。
+		
+	6. 删除视图
+	DROP VIEW [IF EXISTS]
+	view_name[, view_name] ...
+	[RESTRICT | CASCADE]
+	其中，view_name是要删除的视图名称，可以添加多个需要删除的视图名称，各个名称之间使用逗号分隔
+	开。删除视图必须拥有DROP权限。
+	DROP VIEW IF EXISTS stu_glass;
+	
+	
+十、MySQL函数
+	1. 触发器
+	触发器事一个特殊的存储过程，不同的是，执行存储过程要使用CALL语句来调用，而触发器的执行不需
+	要使用CALL语句来调用，也不需要手工启动，只要当一个预定义的事件发生的时候，就会被MySQL自动启
+	动。比如当对fruits表进行操作（INSERT、DELETE或UPDATE）时就会激活它执行。
+	
+	创建只有一个执行语句的触发器：
+	CREATE TRIGGER trigger_name trigger_time trigger_event ON tbl_name 
+	FOR EACH ROW trigger_stmt
+	其中trigger_name是触发器名称；trigger_time标识触发时机，可以指定为before或after；
+	trigger_event标识触发事件，包括INSERT、UPDATE和DELETE；trigger_stmt是程序体。触发器程序可以
+	使用begin和end作为开始和结束，中间包含多条语句。
+	
+	创建有多个执行语句的触发器
+	CREATE TRIGGER trigger_name trigger_time trigger_event ON tbl_name 
+	FOR EACH ROW trigger_stmt
+	语句关键字含义同上。
+	
+	2. 查看触发器
+	SHOW TRIGGERS;
+	这个会查看所有的触发器信息，但是触发器很多的时候可以直接从information_schema数据库中的
+	triggers表中查找。语法如下：
+	SELECT * FROM INFORMATION_SCHEMA.TRIGGERS WHERE TRIGGER_NAME = 'trig_update'\G
+	
+	3. 触发器的使用
+	略
+	
+	4. 删除触发器
+	DROP TRIGGER [schema_name.]trigger_name
+	其中，schema_name表示数据库名称，是可选的。如果省略了schema，将从当前数据库中舍弃触发程序。
+	
+	5. 注意问题
+	在使用触发器的时候，对于相同的表，相同的事件只能创建一个触发器。比如表account创建了一个
+	BEFORE INSERT触发器，那么如果对表account再次创建一个BEFORE INSERT触发器将报错，此时，只可以
+	在account上创建AFTER INSERT或者BEFORE UPDATE等类型的触发器。
+	触发器定义之后，每次执行触发事件，都会激活触发器并执行触发器中的语句。如果需求发生变化，而
+	触发器没有进行相应的改变或者删除，则触发器仍然会执行旧的语句，从而影响新的数据的完整性。因
+	此，要将不再使用的触发器及时删除。
+	
+	
+十一、性能优化
+	1. 优化简介
+	SHOW STATUS LIKE 'value';
+	其中，value是要查询的参数值，一些常用的性能参数如下：
+		A. Connections：连接MySQL服务器的次数。
+		B. Uptime：MySQL服务器的上线事件。
+		C. Slow_queries：慢查询次数。
+		D. Com_select：查询操作的次数。
+		E. Com_insert：插入操作的次数。
+		F. Com_update：更新操作的次数。
+		G. Com_delete：删除操作的次数。
+	
+	2. 优化查询
+		A. 分析查询语句
+		EXPLAIN语句的基本语法如下：
+		EXPLAIN [EXTENDED] SELECT select_options
+		查询结果详细解释：
+		id：SELECT识别符。这是SELECT的查询序列号。
+		select_type：表示SELECT语句的类型。它可以是以下几种取值：SIMPLE表示简单查询，其中不包括
+		连接查询和子查询；PRIMARY表示主查询，或者是最外层的查询语句；UNION表示连接查询的第二个
+		或后面的查询语句；DEPENDENT UNION，连接查询中的第二个或后面的SELECT语句，取决于外面的查
+		询；UNION RESULT，连接查询的结果；SUBQUERY，子查询中的第一个SELECT语句；DEPNDENT 
+		SUBQUERY，子查询中的第一个SELECT，取决于外面的查询；DERIVED，导出表的SELECT（FROM子句的
+		子查询）。
+		table：表示查询的表。
+		type：表示表的连接类型。下面按照最佳类型到最差类型的顺序给出各种连接类型：
+			a. system
+			该表是仅有一行的系统表。这是const连接类型的一个特例。
+			b. const
+			c. eq_ref
+			d. ref
+			e. ref_or_null
+			f. index_merge
+			g. unique_subquery
+			h. index_subquery
+			i. range
+			j. index
+			k. ALL
+		possible_keys：possible_keys列指出MySQL能使用哪个索引在该表中找到行。如果该列是NULL，则
+		没有相关的索引。在这种情况下，可以通过检查WHERE子句看它是否引用某些列或适合索引的列来提
+		高查询性能。如果是这样，可以创建合适的索引来提高查询的性能。
+		key：表示查询实际使用到的索引，如果没有选择索引，该列的值是NULL。要想强制MySQL使用或忽
+		视possible_keys列中的索引，在查询中使用FORCE INDEX、USE INDEX或者IGNORE INDEX。
+		key_len：表示MySQL选择的索引字段按字节计算的长度，如果键是NULL，则长度为NULL。注意通过
+		key_len值可以确定MySQL将实际使用一个多列索引中的几个字段。
+		ref：表示使用哪个列或常数与索引一起来查询记录。
+		rows：显示MySQL在表中进行查询时必须检查的行数。
+		Extra：该列MySQL在处理查询时的详细信息。
+		DSECRIBE语句的使用方法与EXPLAIN语句时一样的，并且分析是结果也是一样的：
+		DESCRIBE/DESC SELECT select_options
+		
+		B. 索引对查询速度的影响
+		略
+		
+		C. 使用索引查询
+		（1） 使用LIKE关键字的查询
+		在使用LIKE关键字进行查询的查询语句中，如果匹配的字符串的第一个字符为“%”，索引不会起作
+		用。只有“%”不在第一个位置，索引才会起作用。
+		EXPLAIN SELECT * FROM fruits WHERE f_name like '%x'\G	//不会用到索引
+		EXPLAIN SELECT * FROM fruits WHERE f_name like 'x%'\G	//会
+		（2）使用多列索引的查询语句
+		MySQL可以为多个字段创建索引。一个索引可以包括16个字段。对于多列索引，只有查询条件中使用
+		了这些字段中第一个字段时，索引才会使用。
+		CREATE INDEX index_id_price ON fruits(f_id, f_price);
+		EXPLAIN SELECT * FROM fruits WHERE f_id = 'l2'\G	//会
+		EXPLAIN SELECT * FROM fruits WHERE f_price=5.2\G	//不会用到索引
+		（3）使用OR关键字的查询语句
+		查询语句的查询条件中只有OR关键字，且前后的两个条件中的列都是索引时，查询中才使用索引。
+		EXPLAIN SELECT * FROM fruits WHERE f_name='apple' OR s_id=101\G		//不会使用到索引
+		EXPLAIN SELECT * FROM fruits WHERE f_name='apple' OR f_id='l2'\G	//会
+		（4）优化子查询
+		子查询虽然可以使查询语句很灵活，但执行效率不高。执行子查询时，MySQL需要为内层查询语句的
+		查询结果建立一个临时表。然后从外层查询语句从临时表中查询记录。查询完毕后，再撤销这些临
+		时表。因此，子查询的速度会受到一定的影响，如果查询的数据量比较大，这种影响就随之增大。
+		在MySQL中，可以使用连接（JOIN）查询来代替子查询。连接查询不需要建立临时表，其速度比子查
+		询要快，如果查询中使用索引的话，性能会更好。连接查询不需要在内存中创建临时表来完成查询
+		工作，因此效率更好。
+		
+	3. 优化数据库结构
+	对于字段较多的表，如果有些字段的使用频率很低，可以将这些字段分离出来形成新表。因为当一个表
+	的数据量很大时，会由于使用频率低的字段的存在而变慢。
+	CREATE TABLE members(
+		Id INT(11) UNSINGED PRIMARY KEY AUTO_INCREMENT,
+		username VARCHAR(255) DEFAULT NULL,
+		password VARCHAR(255) DEFAULT NULL,
+		last_login_time DATETIME DEFAULT NULL,
+		last_login_ip VARCHAR(255) DEFAULT NULL
+	);
+	CREATE TABLE members_detail(
+		member_id INT(11) PRIMARY KEY DEFAULT 0,
+		address VARCHAR(255) DEFAULT NULL,
+		telephone VARCHAR(16) DEFAULT NULL,
+		description TEXT DEFAULT NULL
+	);
+	SELECT * FROM members LEFT JOIN members_detail ON members.id=members_detail.member_id;
+	
+	对于经常需要联合查询的表，可以建立中间表以提高查询效率。通过建立中间表，把需要经常联合查询
+	的数据插入到中间表中，然后将原来的联合查询改为对中间表的查询，以此来提高查询效率。
+		
+	增加冗余字段
+	表的规范化程度越高，表与表之间的关系就越多，需要连接查询的情况就越多。例如，员工的信息存储
+	在staff表中，部门信息存储在department表中。通过staff表中的信息department_id字段与department
+	表建立关联关系。如果要查询一个员工所在部门的名称，必须从staff表中查找员工所在部门的编号，然
+	后根据这个编号去department表查找部门的名称。如果经常需要进行这个操作，连接查询会浪费很多时
+	间。可以在staff表中增加一个冗余字段department_name，该字段用来存储员工所在部门名称，这样就
+	不用每次都进行连接操作了。
+	冗余字段会导致一些问题。比如，冗余字段的值在一个表中被修改了，就要想办法在其他表中更新该字
+	段，否则就会使原本一致的数据变得不一致。分解表、增加中间表和增加冗余字段都浪费了一定的磁盘
+	空间。从数据库性能来看，为了提高查询速度而增加少量的大部分是可以接受的。是否通过增加冗余来
+	提高数据库性能，这要根据实际需要综合分析。
+	
+	优化插入记录的速度
+		对于MyISAM引擎：
+		A. 禁用索引
+		ALTER TABLE table_name DISABLE KEYS;
+		重新开启：
+		ALTER TABLE table_name ENABLE KEYS;
+		
+		B. 禁用唯一性检查
+		插入数据时，MySQL会对插入的记录进行唯一性校验，会降低插入记录的速度。
+		禁用唯一性检查的语句如下：
+		SET UNIQUE_CHECKS = 0;
+		开启：
+		SET UNIQUE_CHECKS = 1;
+		
+		C. 使用批量插入
+		插入多条记录时，可以使用一条INSERT语句插入很多记录，这样比多次使用INSERT快。
+		
+		D. 使用LOAD DATA INFILE批量导入
+		LOAD DATA INFILE语句导入数据的速度比INSERT快。
+		
+		对于InnoDB引擎的表，常见的优化方法入下：
+		A. 禁用唯一性检查
+		同MyISAM。
+		
+		B. 禁用外键检查
+		SET foreign_key_checks = 0;
+		恢复：
+		SET foreign_key_checks = 1;
+		
+		C. 禁止自动提交
+		SET autocommit = 0;
+		恢复：
+		SET autocommit = 1;
+		
+	分析表、检查表和优化表
+		A. 分析表
+		ANALYZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tal_name[, tbl_name]...
+		LOCAL关键字是NO_WRITE_TO_BINLOG关键字的别名，二者都是执行过程不写入二进制日志，
+		tbl_name为分析的表的表名，可以有一个或多个。
+		使用ANALYZE TABLE分析表的过程中，数据库系统会自动对表加一个只读锁。在分析期间，只能读取
+		表中的记录，不能更新和插入记录。ANALYZE TABLE语句能够分析InnoDB、BDB和MyISAM类型的表。
+		
+		B. 检查表
+		CHECK TABLE语句能够检查InnoDB和MyISAM类型的表是否存在错误。对于MyISAM类型的表，CHECK 
+		TABLE语句还会更新关键字统计数据。而且，CHECK TABLE也可以检查视图是否有错误，比如在定义
+		中被引用的表已不存在。基本语法如下：
+		CHECK TABLE tbl_name[, tbl_name]...[option]...
+		option = {QUICK | FAST | MEDIUM | EXTENDED |CHANGED}
+		其中，tbl_name是表名；option参数有5个取值，分别是QUICK、FAST、MEDIUM、EXTENDED和
+		CHANGED。
+		QUICK：不扫描行，不检查错误的连接。
+		FAST：只检查没有被正确关闭的表。
+		CHANGED：只检查上次检查后被更改的表和没有被正确关闭的表。
+		MEDIUM：扫描行，以验证被删除的连接是有效的。也可以计算各行的关键字校验和，并使用计算出
+		的校验和验证这一点。
+		EXTENDED：对每行的所有关键字进行一个全面的关键字查找。这可以确保表是100%一致的，但是花
+		的事件比较长。
+		option只对MyISAM类型的表有效；CHECK TABLE语句在执行过程长也会给表加上只读锁。
+		
+		C. 优化表
+		MySQL中使用OPTIMIZE TABLE语句来优化表。该语句对InnoDB和MyISAM类型的表都有效。但是，
+		OPTIMIZE TABLE语句只能对优化表中的VARCHAR、BLOB或TEXT类型的字段。
+		OPTIMIZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name[, tbl_name]...
+		通过OPTIMIZE TABLE语句可以消除删除和更新造成的文件碎片。OPTIMIZE TABLE语句在执行过程中
+		也会给表加上只读锁。
+	
+	4. 优化MySQL服务器
+		A. 优化服务器硬件
+		
+		B. 优化MySQL的参数
+		MySQL服务的配置参数都在my.cnf或者my.ini文件的[mysqld]组中。
+		
+	
+十二、MySQL函数
+    1. 数学函数
+    ABS(x)  绝对值函数
+    PI()    圆周率函数
+    SQRT()  开方
+    MOD(x, y)   求余
+    CEIL(x)、CEILING(x)的意义相同，返回不小于x的最小整数值，返回值转化为一个BIGINT。
+    FLOOR(x)返回不大于x的最大整数。
+    RAND(x)返回一个随机浮点值v，范围在0到1之间（即0<=v<=1.0）。若指定一个整数参数x，则它被用作种
+    子值，用来产生重复序列。带一样的参数得到一样的值。
+    ROUND(x)返回最接近于参数x的整数，对x四舍五入。
+    ROUND(x, y)返回最接近于参数x的数，其值保留到小数点后y位，若y为负值，则将保留x值到小数点左边y
+    位。
+    TRUNCATE(x, y)返回被舍去至小数点后y位的数字x。若y的值为0，则结果不带有小数点或不带有小数部
+    分。若y设为负数，则截去（归零）x小数点左起第y位开始后面所有低位的值。这个函数不会四舍五入。
+    SIGN(x)返回参数的符号，x的值为负、零或正时返回结果依次为-1、0或1。
+    POW(x, y)或者POWER(x, y)返回x的y次方的结果值。
+    EXP(x)返回e（自然数）x乘方。
+    LOG(x)返回x的自然对数，x相对于基数e的对数。
+    LOG10(x)返回基数为10的对数。
+    RADIANS(x)将参数x由角度转化为弧度。
+    DEGREES(x)将参数x由弧度转化为角度。
+    SIN(x)返回x正弦，x为弧度值。
+    ASIN(x)返回x的反正弦，即正弦为x的值。若x不在-1到1的范围内，则返回NULL。
+    COS(x)和ACOS(x)是余弦和反余弦函数。
+    TAN(x)返回x的正切。ATAN(x)返回x的反正切。
+    COT(x)返回x的余切。
+    
+    2. 字符串函数
+    CHAR_LENGTH(str)返回值为字符串str所包含的字符个数。
+    LENGTH(x)函数计算字符串的长度。
+    CONCAT(s1, s2, ...)返回结果为连接参数产生的字符串。任何参数为NULL，则返回值为NULL。
+    CONCAT_WA(x, s1, s2, ...)第一个参数x是其他参数的分隔符。函数会忽略任何分隔符参数后的NULL值。
+    INSERT(s1, x, len, s2)返回字符串s1，其子字符串起始于x位置和被字符串s2取代的len字符。如果x超过
+    字符串长度，则返回值为原始字符串。假如len的长度大于其他字符串的长度，则从位置x开始替换。若任
+    何一个参数为NULL，则返回NULL。
+    LOWER(str)和LCASE(str)转换为小写。
+    UPPER(str)和UCASE(str)转换为大写。
+    LEFT(s, n)返回字符串s开始的最左边的n个字符。
+    RIGHT(s, n)返回字符串s最右边n个字符。
+    LPAD(s1, len, s2)返回字符串s1，其左边由字符串s2填补到len字符长度。假如s1的长度大于len，则返回
+    值被缩短至len字符长度。
+    RPAD(s1, len, s2)返回字符串s1，其右边被字符串s2填补至len字符长度。假如s1的长度大于len，则返回
+    值被缩短至len字符长度。
+    LTRIM(s)返回字符串s，字符串左侧空格字符被删除。
+    RTRIM(s)返回字符串s，字符串右侧空格字符被删除。
+    TRIM(s)删除字符串s两侧的空格。
+    TRIM(s1 FROM s)删除字符串s中两端所有的子字符串s1。s1位可选项，在未指定情况下，删除空格。
+    REPEAT(s, n)返回一个由重复的字符串s组成的字符串，字符串s的数目等于n。若n<=0，则返回一个空字符
+    串。若s或n为NULL，则返回NULL。
+    SPACE(n)返回一个由n个空格组成的字符串。
+    REPLACE(s, s1, s2)使用字符串s2替代字符串s中所有的字符串s1。
+    STRCMP(21, s2)若所有的字符串均相同，则返回0；若根据当前分类次序，第一个参数小于第二个，则返回
+    -1，其他情况返回1。
+    SUBSTRING(s, n, len)带有len参数的格式，从字符串s返回一个长度同len字符相同的子字符串，起始于位
+    置n。也可能对n使用一个负值。假若这样，则子字符串的位置起始于字符串结尾的n字符，即倒数第n个字
+    符，而不是字符串的开头位置。
+    MID(s, n, len)与SUBSTRING(s, n, len)的作用相同。
+    LOCATE(str1, str)、POSITION(str1 IN str)和INSTR(str, str1)3个函数作用相同，返回子字符串str1在
+    字符串str中的开始位置。
+    REVERSE(s)将字符串s反转，返回的字符串的顺序和s字符串顺序相反。
+    ELT(N, 字符串1, 字符串2, ...)若N=1，则返回值为字符串1，若N=2，则返回值为字符串2，以此类推。若
+    N小于1或大于参数的数目，则返回值为NULL。
+    FIELD(s, s1, s2, ...)返回字符串s在列表s1,s2,...中第一次出现的位置，在找不到s的情况下，返回值
+    为0。如果s为NULL，则返回值为0，原因是NULL不能同任何值进行同等比较。
+    FIND_IN_SET(s1, s2)返回字符串s1在字符串列表s2中出现的位置，字符串列表是一个由多个逗号分开的
+    字符串组成的列表。如果s1不在s2或s2为空字符串，则返回0。如果任意一个参数为NULL，则返回值为
+    NULL。这个函数在第一个参数包含一个逗号时将无法正常运行。
+    MAKE_SET(x, s1, s2)返回由x的二进制数指定的相应位的字符串组成的字符串，s1对应比特1，s2对应比特
+    01，以此类推。s1，s2...中的NULL值不会被添加到结果中。
+    
+    3. 日期和时间函数
+    CURDATE()和CURRENT_DATE()函数作用相同，将当前日期按照“YYYY-MM-DD”或YYYYMMDD格式的值返回，具体
+    格式根据函数用在字符串或是数字语境中而定。
+    CURTIME()和CURRENT_TIME()函数作用相同，将当前时间以“HH:MM:SS”或HHMMSS的格式返回，具体格式根据
+    函数用在字符串或是数字语境中而定。
+    CURRENT_TIMESTAMP()、LOCALTIME()、NOW()和SYSDATE()4个函数的作用相同，均返回当前日期和时间值，
+    格式为“YYYY-MM-DD HH:MM:SS”或YYYYMMDDHHMMSS，具体格式根据函数用在字符串或数字语境中而定。
+    UNIX_TIMESTAMP(date)若无参数调用，则返回一个Unix时间戳（1970-01-01 00:00:00 GMT之后的秒数）
+    作为无符号整数。其中GMT（格林治标准时间）。若用date来调用UNIX_TIMESTAMP()，它会将参数值以
+    “1970-01-01 00:00:00”GMT后的秒数的形式返回。date可以是一个DATE字符串、DATETIME字符串、
+    TIMESTAMP或一个当地时间的YYMMDD或YYYYMMDD格式的数字。
+    FROM_UNIXTIME(date)函数把UNIX时间转换为普通格式的时间，与UNIX_TIMESTAMP(date)函数互为反函数。
+    UTC_DATE()函数返回当前UTC（世界标准时间）日期值，其格式为“YYYY-MM-DD”或YYYYMMDD。
+    UTC_TIME()函数返回当前UTC时间值，其格式为“HH:MM:SS”。
+    MONTH(date)函数返回date对应的月份，范围值从1~12。
+    MONTHNAME(date)函数返回日期date对应月份的英文全名。
+    DAYNAME(d)函数返回d对应的工作日的英文名称。
+    DAYOFWEEK(d)函数返回d对应的一周中的索引位置。1表示周日，2表示周一，...7表示周六。
+    WEEKDAY(d)返回d对应的工作日索引。0表示周一，1表示周二，...6表示周日。
+    WEEK(d)计算日期d是一年中的第几周。WEEK()的双参数形式允许指定该星期是起始于周日或周一，以及返
+    回值是否为从0~53或从1~53。若Mode参数被省略，则使用default_week_format系统自变量的值。
+    WEEKOFYEAR(d)计算某天位于一年中的第几周，范围从1~53.相当于WEEK(d, 3)。
+    DAYOFYEAR(d)函数返回d是一年中的第几天，范围是从1~366。
+    DAYOFMONTH(d)函数和返回d是一个月中的第几天，范围是从1~31。
+    YEAR(date)返回date对应的年份，范围是1970~2069。
+    QUARTER(date)返回date对应的一年中的季度值，范围是从1~4。
+    MINUTE(time)返回time对应的分钟数，范围是从0~59。
+    SECOND(time)返回time对应的秒数，范围是从0~59。
+    EXTRACT(type FROM date)函数使用的时间间隔类型说明符同DATE_ADD()或DATE_SUB()的相同，但它是从
+    日期中提取一部分，而不是执行日期运算。
+    TIME_TO_SEC(time)返回已转换为秒的time参数。转换公式为：小时*3600+分钟*60+秒。
+    SEC_TO_TIME(seconds)返回被转化为小时、分钟和秒数的seconds参数值，其格式化为“HH:MM:SS”或
+    HHMMSS。
+    DATE_ADD(date, INTERVAL expr type)和DATE_SUB(date, INTERVAL expr type)，其中，date是一个
+    DATETIME或DATE值，用来指定起始时间。expr是一个表达式，用来指定从起始日期添加或减去的时间间隔
+    值。expr是一个字符串；对于负值的时间间隔，它可以以一个符号开头。type为关键词，它指示了表达式
+    被解释的方式。
+    DATE_ADD(date, INTERVAL expr type)或者ADDDATE(date, INTERVAL expr type)两个函数作用相同，执行
+    日期相加运算。
+    DATE_SUB(date, INTERVAL expr type)或者SUBDATE(date, INTERVAL expr type)两个函数作用相同，执行
+    日期相减运算。
+    ADDTIME(date, expr)函数将expr值添加到date，并返回修改后的值，date是一个日期或者日期时间表达
+    式，而expr是一个时间表达式。
+    SUBTIME(date, expr)函数中date减去expr值，并返回修改后的值，date是一个日期或者日期时间表达式，
+    而expr是一个时间表达式。
+    DATEDIFF(date1, date2)返回起始时间date1和结束时间date2之间的天数。date1和date2为日期或
+    date-and-time表达式。计算中只用到这些值的日期部分。
+    DATE_FORMAT(date, format)根据format指定的格式显示date值。
+    TIME_FORMAT(time, format)根据format字符串安排time值的格式。format字符串可能仅会处理包含小时、
+    分钟和秒的格式说明符，其他说明符产生一个NULL值或0。若time值包含一个大于23的小时部分，则%H和
+    %k小时格式说明符会产生一个大于0.23的通常范围的值。
+    GET_FORMAT(val_type, format_type)返回日期时间字符串的显示格式，val_type表示日期数据类型，包括
+    DATE、DATETIME和TIME；format_type表示格式化显示类型，包括EUR、INTERVAL、ISO、JIS、USA。
+    
+    4. 条件判断函数
+    IF(expr, v1, v2)如果表达式是TRUE，则返回v1，否则返回v2。IF()的返回值为数字值或字符串值，具体
+    情况视其所在的语境而定。
+    IFNULL(v1, v2)假如v1不为NULL，则IFNULL()的返回值为v1；否则其返回值为v2。
+    CASE expr WHEN v1 THEN r1[WHEN v2 THEN r2][ELSE rn] END
+    该函数表示，如果expr值等于某个vn，则返回对应位置THEN后面的结果。如果与所有值都不相等，则返回
+    ELSE后面的rn。
+    
+    5. 系统信息函数
+    VERSION()返回指示MySQL服务器版本的字符串。
+    CONNECTION_ID()返回MySQL服务器当前的连接次数，每个连接都有各自唯一的ID。
+    SHOW PROCESSLIST; SHOW FULL PROCESSLIST;
+    PROCESSLLIST命令的输出结果显示了有哪些线程在运行，不仅可以查看当前所有的连接数，还可以查看当
+    前的连接状态，帮助识别出有问题的查询语句等。如果是root账号，能看到所有用户的当前连接；如果是
+    其他普通账号，则只能看到自己占用的连接。
+    DATABASE()和SCHEMA()函数返回使用utf8字符集的默认（当前）数据库名。
+    USER()、CURRENT_USER、CURRENT_USER()、SYSTEM_USER()和SESSION_USER()这几个函数返回当前被MySQL
+    服务器验证的用户名和主机名组合。这个值符合确定当前登录用户存储权限的MySQL账户。一般情况下，几
+    个函数的返回值是相同的。
+    CHARSET(str)返回字符串str自变量的字符集。
+    COLLATION(str)返回字符串str的字符排列方式。
+    LAST_INSERT_ID()自动返回最后一个INSERT或UPDATE为AUTO_INCREMENT列设置的第一个发生的值。
+    
+    6. 加密函数
+    PASSWORD(str)从原明文密码str计算并返回加密后的密码字符串，当参数为BULL时，返回NULL。
+    MD5(str)为字符串算出一个MD5 128比特校验和。该值以32位十六进制数字的二进制字符串形式返回，若参
+    数为NULL，则会返回NULL。
+    ENCODE(str, pswd_str)使用pswd_str作为密码，加密str。使用DECODE()解密结果，结果是一个和str长度
+    相同的二进制字符串。
+    DECODE(crypt_str, pswd_str)使用pswd_str作为密码，解密解密加密字符串crypt_str，crypt_str是由
+    ENCODE()返回的字符串。
+    
+    7. 其他函数
+    FORMAT(x,n)将数字x格式化，并以四舍五入的方式保留小数点后n位，结果以字符串的形式返回。若n为0，
+    则返回结果函数不含小数部分。
+    CONV(N, from_base, to_base)函数进行不同进制数间的转换。返回值为数值N的字符串表示，由
+    from_base进制转化为to_base进制。如有任意一个参数为NULL，则返回值为NULL。自变量N被理解为一个
+    整数，但是可以被指定为一个整数或字符串。最小基数为2，而最大基数则为36。
+    INET_ATON(expr)给出一个字符串的网络地址的点地址表示，返回一个代表该地址数值的整数。地址可以是
+    4或8比特地址。
+    INET_NTOA和INER_ATON互为反函数。
+    GET_LOCK(str, timeout)设法使用字符串str给定的名字得到一个锁，超时为timeout秒。若成功得到锁，
+    则返回1；若操作超时则返回0；若发生错误，则返回NULL。加入有一个用GT_LOCK()得到的锁，当执行
+    RELEASE_LOCK()或连接断开（正常或非正常）时，这个锁就会解除。
+    RELEASE_LOCK(str)解开被GET_LOCK()获取的，用字符串str所命名的锁。若锁被解开，则返回1；若该线程
+    尚未创建锁，则返回0（此时锁没有被解开）；若命名的锁不存在，则返回NULL。若该锁从未被GET_LOCK()
+    的调用获取，或锁已经被提前解开，则该锁不存在。
+    IS_FREE_LOCK(str)检查名为str的锁是否可以使用（换言之，没有被封锁）。若锁可以使用，则返回1（没
+    有人在用这个锁）；若这个锁正在被使用，则返回0；出现错误，则返回NULL（诸如不正确的参数）。
+    IS_USED_LOCK(str)检查名为str的锁是否正在被使用（换言之，被封锁）。若被封锁，则返回使用该锁的
+    客户端的连接标识符；否则，返回NULL。
+    BENCHMARK(count, expr)函数重复count次执行表达式expr。它可以用于计算MySQL处理表达式的速度。结
+    果通常为0（0只是表示处理过程很快，并不是没有花费时间），另一个作用是它可以在MySQL客户端内部报
+    告语句执行的时间。
+    CONVERT(...USING...)带有USING的CONVERT()函数被用来在不同的字符集之间转化数据。
+    CAST(x, AS type)和CONVERT(x, type)函数将一个类型的值转换为另一个类型的值，可转换的type有：
+    BINARY、CHAR(n)、DATE、TIME、DATETIME、DECIMAL、SIGNED、UNSIGNED。		
+		
+	
+
+十三、练习
+    1. 查询练习
+    自连接查询：
+    CREATE TABLE `t2` (
+      `id` int(11) NOT NULL,
+      `gid` char(1) DEFAULT NULL,
+      `col1` int(11) DEFAULT NULL,
+      `col2` int(11) DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+    insert into t2 values   
+    (1,'A',31,6), 
+    (2,'B',25,83), 
+    (3,'C',76,21), 
+    (4,'D',63,56), 
+    (5,'E',3,17), 
+    (6,'A',29,97), 
+    (7,'B',88,63), 
+    (8,'C',16,22), 
+    (9,'D',25,43), 
+    (10,'E',45,28), 
+    (11,'A',2,78), 
+    (12,'B',30,79), 
+    (13,'C',96,73), 
+    (14,'D',37,40), 
+    (15,'E',14,86), 
+    (16,'A',32,67), 
+    (17,'B',84,38), 
+    (18,'C',27,9), 
+    (19,'D',31,21), 
+    (20,'E',80,63), 
+    (21,'A',89,9), 
+    (22,'B',15,22), 
+    (23,'C',46,84), 
+    (24,'D',54,79), 
+    (25,'E',85,64), 
+    (26,'A',87,13), 
+    (27,'B',40,45), 
+    (28,'C',34,90), 
+    (29,'D',63,8), 
+    (30,'E',66,40), 
+    (31,'A',83,49), 
+    (32,'B',4,90), 
+    (33,'C',81,7), 
+    (34,'D',11,12), 
+    (35,'E',85,10), 
+    (36,'A',39,75), 
+    (37,'B',22,39), 
+    (38,'C',76,67), 
+    (39,'D',20,11), 
+    (40,'E',81,36); 
+    查询每组col2最大的值。
+    方法1：
+    select * from t2 as a where not exists (select 1 from t2 where gid=a.gid and col2>a.col2);
+    a. select 1 from t2 where gid=a.gid and col2>a.col2：select就进入了隐式迭代，同组中比当前
+    col2大的就输出1；
+    b. 然后not exists来判断是否存在比当前col2大的，如果不存在就返回true；返回true就输出当前
+    col2这一列；
+    方法2：
+    select * from (select * from t2 order by gid, col2 desc) as t group by gid;
+    t2按照gid和col2来降序排列，然后group分组，分组就是取first row，而first row就是最大值；
+    咋看之下貌似不用自连接也可以搞定，但是group by分组是不能放在order by之后的，否则会报错。
+    还有就是as t这个是必不可少的，否则会有Every derived table must have its own alias错误，这
+    个错误提示进行嵌套查询的时候子查询出来的结果是作为一个派生表；来进行上一级的查询的，所以
+    子查询的结果必须要有一个别名。
+    
+    通过自连接查询每组col2最大的三个值：
+    select * from t2 as a where 3 > (select count(col2) from t2 where gid=a.gid and col2>a.col2)
+    order by a.gid, a.col2 desc;
+    首先在mysql总要把select翻译为输出，并且要满足where以后才输出，输出以后再分组，分组以后才
+    轮到排序，排序之后才轮到取几个。
+    
+    连接查询：
+    create table practice_1(
+        id int, age int
+    );
+    create table practice_2(
+        id int, name varchar(45)
+    );
+    insert into practice_1 values(1, 10),(2, 11),(3, 12),(4, 13);
+    insert into practice_2 values(2, 'zhang'),(3, 'li'),(4, 'zhou'),(5, 'chen');
+    内连接查询：（只有一种场景）
+    这种场景下得到的满足某一条件的是A，B内部的数据。
+    select a.*, b.* from practice_1 a join practice_2 b on a.id = b.id;
+    外连接查询：（六种场景）
+        a. left [outer] join
+        这种场景下得到的是A的所有数据，和满足某一条件的B的数据。
+        select a.*, b.* from practice_1 a left join practice_2 b on a.id = b.id;
+        practice_2表中不存在的记录将会填充NULL。
+        
+        b. left [outer] join + [where B.column is NULL];
+        这种场景下得到的是A中的所有数据减去和B满足同一条件的数据，然后得到的A剩余数据。
+        select a.id aid, a.age, b.id bid, b.name from practice_1 a left join practice_2 b on
+        a.id = b.id where b.id is NULL;
+        
+        c. right [outer] join
+        这种场景下得到的是B的所有数据，和满足某一条件的A的数据。
+        select a.id aid, a.age, b.id bid, b.name from practice_1 a right join practice_2 b on
+        a.id = b.id;
+        
+        d. left [outer] join + [where A.column is NULL];
+        这种场景下得到的是B中的所有数据减去 和A满足同一条件 的数据，然后得到的B剩余数据。
+		select a.id aid, a.age, b.id bid, b.name from practice_1 a right join practice_2 b on
+        a.id = b.id where a.id is NULL;
+        
+        e. full_join（mysql不支持，但是可以用left join union right join代替）
+        这种场景下得到的是满足某一条件的公共记录，和独有的记录。
+        select a.id aid, a.age, b.id bid, b.name from practice_1 a
+        left join practice_2 b on
+        a.id = b.id
+        union
+        select a.id aid, a.age, b.id bid, b.name from practice_1 a
+        right join practice_2 b
+        on a.id = b.id;
+        
+		f. full join + is null（mysql不支持，但是可以用(left join + is null) union 
+        (right join + is null)代替）
+        select a.id aid,a.age,b.id bid,b.name from practice_1 a  
+        left join practice_2 b  
+        on a.id = b.id  
+        where b.id is null  
+        union  
+        select a.id aid,a.age,b.id bid,b.name from practice_1 a  
+        right join practice_2 b  
+        on a.id = b.id  
+        where a.id is null;
+        这种场景下得到的是A，B中不满足某一条件的记录之和。
+		注：上面共有其中七（2^3-1）种应用场景，还有一种是全空白，那就是什么都不查，七种情形包含
+        了实际应用所有可能的场景。
+        
+    交叉查询：cross join
+        a. 实际应用中还有这样一种情绪，想得到A，B记录的排列组合，即笛卡尔积，这个就不好用集合和
+        元素来表示了，需要用到cross join：
+        select a.id aid, a.age, b.id bid, b.name from practice_1 a cross join practice_2 b;
+        b. 还可以为cross join指定条件（where）：
+        select a.id aid, a.age, b.id bid, b.name from practice_1 a cross join practice_2 b
+        where a.id = b.id;
+        这种情况实际上实现了内连接的效果。
+        
+    上面的连接查询存在遗漏，那就是mysql对sql语句的容错问题，即在sql语句不完全符合书写建议的情况
+    下，mysql会允许这种情况，尽可能解释它：
+        a. 一般cross join后面加上where条件，但是用cross join + on也是被解释为cross join + where。
+        b. 一般内连接都需要加上on限定条件，如上面场景一；如果不加会被解释为交叉连接。
+        c. 如果连接表格使用的是逗号，会被解释为交叉连接。
+        注：sql标准中还有union join和natural join，mysql不支持，而且本身也没有多大意义，其结果
+        可以用上面的几种连接方式得到。
+        
+    子查询：
+    在一个表表达式中可以调用另一个表表达式，这个被调用的表表达式叫做子查询，我们也称作子选择或内
+    嵌选择。子查询的结果传递给调用它的表表达式的继续处理。
+    子查询分类：
+    子查询按返回结果集的不同分为4种：表子查询、行子查询、列子查询和标量子查询。
+    表子查询：返回的结果集是一个行的集合，N行N列。表子查询经常用于父查询的FROM子句中。
+    行子查询：返回的结果集是一个列的集合，一行N列。行子查询可以用于父查询的FROM子句和where子句。
+    列子查询：返回的结果集是一个行的集合，N行一列。
+    标量子查询：返回的结果集是一个标量集合，一行一列，也就是一个标量值。可以指定一个标量表达式的
+    任何地方，都可以用一个标量子查询。
+    从定义上讲，每个标量子查询也是一个行子查询和一个列子查询，反之则不是；每个行子查询和列子查询
+    也是一个表子查询，反之也不是。
+    
+    按照对返回结果的调用方法：
+    子查询对返回结果集的调用方法，可分为where型子查询，from型子查询及exists型子查询。
+    where型子查询：（把内层查询结果当做外层查询结果的比较条件）
+    定义：where型的子查询就是把内层查询的结果当作外层查询的条件。
+    from型子查询：（把内层的查询结果供外层再次查询）
+    定义：from子查询就是把子查询的结果（内存里的一张表）当作一张临时表，然后再对它进行处理。
+    exists型子查询：（把外层查询结果拿到内层，看内层的查询是否成立）
+    定义：exists子查询就是对外层表进行循环，再对内表进行内层查询。和in()差不多，但是它们还是有区
+    别的。主要是看两张表大小差异程度，若子查询表大则用exists（内层索引），反之用in（外层索引）。
+    
+    
+    子查询规则：
+        A. 一个子查询必须放在圆括号中。
+        B. 将子查询放在比较条件的右边增加可读性。
+        子查询不包含order by子句，对一个select语句只能用一个order by子句，并且如果指定了它就必须
+        放在主select语句的最后。
+        C. 在子查询中可以使用两种比较条件：单行运算符（>、>=、<、<>、<=）和多行运算符
+        （IN、ANY、ALL）。
+    例子：
+        CREATE TABLE PLAYERS (
+            PLAYERNO      INTEGER      NOT NULL,  
+            NAME           CHAR(15)     NOT NULL,  
+            INITIALS       CHAR(3)      NOT NULL,  
+            BIRTH_DATE     DATE                 ,  
+            SEX            CHAR(1)      NOT NULL,  
+            JOINED         SMALLINT     NOT NULL,  
+            STREET         VARCHAR(30)  NOT NULL,  
+            HOUSENO        CHAR(4)              ,  
+            POSTCODE       CHAR(6)              ,  
+            TOWN           VARCHAR(30)  NOT NULL,  
+            PHONENO        CHAR(13)             ,  
+            LEAGUENO       CHAR(4)              ,  
+            PRIMARY KEY    (PLAYERNO)
+        );  
+  
+        CREATE TABLE PENALTIES (
+            PAYMENTNO      INTEGER      NOT NULL,  
+            PLAYERNO       INTEGER      NOT NULL,  
+            PAYMENT_DATE   DATE         NOT NULL,  
+            AMOUNT         DECIMAL(7,2) NOT NULL,  
+            PRIMARY KEY    (PAYMENTNO)
+        ); 
+        表players为球员信息基本表，表penalties为有过罚款记录的球员信息列表。
+        INSERT INTO PLAYERS VALUES (2, 'Everett', 'R', '1948-09-01', 'M', 1975, 'Stoney Road','43', '3575NH', 'Stratford', '070-237893', '2411');  
+        INSERT INTO PLAYERS VALUES (6, 'Parmenter', 'R', '1964-06-25', 'M', 1977, 'Haseltine Lane','80', '1234KK', 'Stratford', '070-476537', '8467');  
+        INSERT INTO PLAYERS VALUES (7, 'Wise', 'GWS', '1963-05-11', 'M', 1981, 'Edgecombe Way','39', '9758VB', 'Stratford', '070-347689', NULL);  
+        INSERT INTO PLAYERS VALUES (8, 'Newcastle', 'B', '1962-07-08', 'F', 1980, 'Station Road','4', '6584WO', 'Inglewood', '070-458458', '2983');  
+        INSERT INTO PLAYERS VALUES (27, 'Collins', 'DD', '1964-12-28', 'F', 1983, 'Long Drive','804', '8457DK', 'Eltham', '079-234857', '2513');  
+        INSERT INTO PLAYERS VALUES (28, 'Collins', 'C', '1963-06-22', 'F', 1983, 'Old Main Road','10', '1294QK', 'Midhurst', '010-659599', NULL);  
+        INSERT INTO PLAYERS VALUES (39, 'Bishop', 'D', '1956-10-29', 'M', 1980, 'Eaton Square','78', '9629CD', 'Stratford', '070-393435', NULL);  
+        INSERT INTO PLAYERS VALUES (44, 'Baker', 'E', '1963-01-09', 'M', 1980, 'Lewis Street','23', '4444LJ', 'Inglewood', '070-368753', '1124');  
+        INSERT INTO PLAYERS VALUES (57, 'Brown', 'M', '1971-08-17', 'M', 1985, 'Edgecombe Way','16', '4377CB', 'Stratford', '070-473458', '6409');  
+        INSERT INTO PLAYERS VALUES (83, 'Hope', 'PK', '1956-11-11', 'M', 1982, 'Magdalene Road','16A', '1812UP', 'Stratford', '070-353548', '1608');  
+        INSERT INTO PLAYERS VALUES (95, 'Miller', 'P', '1963-05-14', 'M', 1972, 'High Street','33A', '5746OP', 'Douglas', '070-867564', NULL);  
+        INSERT INTO PLAYERS VALUES (100, 'Parmenter', 'P', '1963-02-28', 'M', 1979, 'Haseltine Lane','80', '6494SG', 'Stratford', '070-494593', '6524');  
+        INSERT INTO PLAYERS VALUES (104, 'Moorman', 'D', '1970-05-10', 'F', 1984, 'Stout Street','65', '9437AO', 'Eltham', '079-987571', '7060');  
+        INSERT INTO PLAYERS VALUES (112, 'Bailey', 'IP', '1963-10-01', 'F', 1984, 'Vixen Road','8', '6392LK', 'Plymouth', '010-548745', '1319');  
+          
+        INSERT INTO PENALTIES VALUES (1,  6, '1980-12-08',100);  
+        INSERT INTO PENALTIES VALUES (2, 44, '1981-05-05', 75);  
+        INSERT INTO PENALTIES VALUES (3, 27, '1983-09-10',100);  
+        INSERT INTO PENALTIES VALUES (4,104, '1984-12-08', 50);  
+        INSERT INTO PENALTIES VALUES (5, 44, '1980-12-08', 25);  
+        INSERT INTO PENALTIES VALUES (6,  8, '1980-12-08', 25);  
+        INSERT INTO PENALTIES VALUES (7, 44, '1982-12-30', 30);  
+        INSERT INTO PENALTIES VALUES (8, 27, '1984-11-12', 75);  
+        
+        a. 获取编号小于10的男性球员的号码（表子查询实例）
+        select playerno from (select playerno, sex from players where playerno < 10)
+        as players10 where sex ='M';
+        
+        b. 获取和100号球员性别相同并且居住在同一城市的球员号码。（行子查询实例）
+        select playerno from players where (sex, town) = 
+        (select sex, towm from players where playerno =100);
+        
+        c. 标量子查询
+        可以指定一个标量表达式的任何地方，几乎都可以使用一个标量子查询。
+        获取和27号球员出生在同一年的球员的号码。
+        select playerno from players where year(birth_date) = 
+        (select year(birth_date) from players where playerno = 27)
+        and playerno <> 27;
+        等同于：
+        select playerno from players where year(birth_date) = 1964 and playerno <> 27;
+        
+        d. 列子查询
+        由于列子查询返回的结果是N行一列，因此不能直接使用= > < >= <=这些比较标量结果的操作符。在
+        列子查询中可以使用in、any(some)和all操作符。
+        IN：在指定项内，同IN（项1，项2，...）
+        ANY：与比较操作符联合使用，ANY关键字必须接在一个比较操作符后面，表示与子查询返回的任何值
+        比较为true，则返回true。
+        SOME：ANY的别名，较少使用。
+        ALL：与比较操作符联合使用，ALL关键字必须接在一个比较操作符的后面，表示与子查询返回的所有
+        值比较都为true，则返回true。
+        获取球员性别为女的所有球员的球员号，名字及所在城市。
+        select playerno, name, town from players where playerno in
+        (select playerno from players where sex = 'F');
+        获取至少比同城的另一个球员年轻的所有球员的号码，日期和居住的城市。
+        select playerno, birth_date, town from players as p1
+        where birth_date > any(select birth_date from players as p2 where p1.town = p2.town);
+        获取最老球员的号码，名字及生日。（即出生数值小于或等于其他球员的球员）
+        select playerno, name, birth_date from players
+        where birth_date <= all(select birth_date from players);
+        
+        e. where型子查询
+        见上。
+        
+        f. from型子查询
+        见上。
+        
+        g. exists子查询
+        exists关键字表示存在。使用exists关键字时，内层查询不返回查询记录，而是返回一个真假值，如
+        果内层查询语句查询到满足条件的记录，只要子查询中至少返回一个值，则exists语句的值就为真，
+        反之亦然。当返回的值为真时，外层查询语句将进行查询，否则不进行查询，not exists与之相反。
+        exists的用法和in差不多。
+        获取那些至少支付了一次罚款的球员的名字和首字母。
+        select name, initials from players
+        where exists(select * from penalties where playerno = players.playerno);
+        
+        
+        

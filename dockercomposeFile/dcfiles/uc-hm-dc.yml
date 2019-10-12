@@ -1,0 +1,24 @@
+version: '3'
+services:
+  usercenter:
+    image: 10.253.254.36/yunce/usercenter:6.0
+    restart: always
+    container_name: "uc_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+     - /home/app/ucfiles:/uc
+    network_mode: "host" 
+  datacache:
+    image: 10.253.254.36/yunce/datacache:6.0
+    restart: always
+    container_name: "dc_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  healthmaster:
+    image: 10.253.254.36/yunce/healthmaster:6.0
+    restart: always
+    container_name: "hm_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 

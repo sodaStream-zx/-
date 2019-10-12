@@ -1,0 +1,23 @@
+server:
+  port: 8089
+spring:
+  application:
+    name: mybaties-redis
+  redis:
+    host: redis-master.dc.zz
+    #    host: 127.0.0.1
+    port: 6379
+  datasource:
+    url: jdbc:mysql://localhost:3306/mybaties?useUnicode=true&useSSL=false&allowMultiQueries=true
+    username: root
+    password: zxx1994
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+
+logging:
+  file: logs/log.log
+  level.root: warn
+  level.pri.myre.demo.mappers: debug
+mybatis:
+  configuration:
+    cache-enabled: true

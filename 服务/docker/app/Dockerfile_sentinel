@@ -1,0 +1,15 @@
+FROM java:8
+MAINTAINER ZXX <1139835238@qq.com>
+ENV TZ=Asia/Shanghai
+#将当前目录中的 name.jar 复制到容器根目录中
+ADD sentinel-dashboard-1.4.2.jar /app.jar
+
+#运行命令
+#RUN chmod 777 -R /nacos
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+#开放端口
+#EXPOSE 8848
+#ENTRYPOINT ["sh","/nacos/bin/startup.sh","-m","standalone","&"]
+#启动运行命令
+ENTRYPOINT ["java","-jar","/app.jar","--server.port=9119","&"]
+

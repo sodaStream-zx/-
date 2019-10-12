@@ -1,0 +1,40 @@
+
+
+git 项目管理
+
+通过sshkey 连接访问
+
+安装git 客户端
+桌面右键 git bash 
+Git global setup 
+git config --global user.name "zhouxiaoxiao"
+git config --global user.email "1139835238@qq.com"
+
+
+1、本地 新建项目 --可并行开发  如netty-server
+2、项目名发给管理员，在gitlab上新建对应项目 生成git 的url 如git@gitlab.web.zz:java/netty-server.git
+3、开发任务 到项目目录下(即进入netty-server目录下 右键 git bash)
+	git init 
+	git add .
+	git commit -m '备注'
+	git remote add origin git@gitlab.web.zz:java/netty-server.git
+	git push -u origin master
+	
+	正常新建项目第一次即完成上传
+
+4、后面每次修改代码后(即开发过程中)，提交代码如下(同样是到项目目录下 右键git bash )
+
+	git add .
+	git commit -m '备注'
+	git pull(交叉开发，有人提交了代码，首先及时的git pull 更新,最好提交者马上说一下，然后相关项目人马上更新)
+	git push -u origin master
+	
+5、以上操作仅对只有一个master 主分支的情况下，若交叉开发存在冲突，最好手动的合并
+
+
+公司自搭建gitlab 服务器，yum 源为用清华大学的yum 源 安装速度会快一些
+gitlab 内部访问地址: http://gitlab.web.zz/users/sign_in
+
+https://www.cnblogs.com/weifeng1463/p/7714492.html 可根据上面的链接进行安装操作
+
+ git fetch --all && git reset --hard origin/master && git pull

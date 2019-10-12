@@ -1,0 +1,115 @@
+version: '3'
+services:
+  warns:
+    image: 10.253.254.36/yuncetest/warns:2.0
+    restart: always
+    container_name: "warn_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  zzpay:
+    image: 10.253.254.36/yuncetest/zzpay:2.0
+    restart: always
+    container_name: "zz_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  search:
+    image: 10.253.254.36/yuncetest/search:2.0
+    restart: always
+    container_name: "sr_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  zzout:
+    image: 10.253.254.36/yuncetest/zzout:2.0
+    restart: always
+    container_name: "zzout_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  zuul:
+    image: 10.253.254.36/yuncetest/zuul:2.0
+    restart: always
+    container_name: "zuul_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host" 
+  usercenter:
+    image: 10.253.254.36/yuncetest/usercenter:2.0
+    restart: always
+    container_name: "uc_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  datacache:
+    image: 10.253.254.36/yuncetest/datacache:2.0
+    restart: always
+    container_name: "datacache2.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  dataprocess:
+    image: 10.253.254.36/yuncetest/dataprocess:2.0
+    restart: always
+    container_name: "dataprocess_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  datastorage:
+    image: 10.253.254.36/yuncetest/datastorage:2.0
+    restart: always
+    container_name: "datastorage_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  es:
+    image: 10.253.254.36/yuncetest/es:2.0
+    restart: always
+    container_name: "uc_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  healthmaster:
+    image: 10.253.254.36/yuncetest/healthmaster:2.0
+    restart: always
+    container_name: "healthmaster_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  healthrisk:
+    image: 10.253.254.36/yuncetest/healthrisk:2.0
+    restart: always
+    container_name: "healthrisk_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  manager:
+    image: 10.253.254.36/yuncetest/manager:2.0
+    restart: always
+    container_name: "manager_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  market:
+    image: 10.253.254.36/yuncetest/market:2.0
+    restart: always
+    container_name: "market_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  originaldata:
+    image: 10.253.254.36/yuncetest/originaldata:2.0
+    restart: always
+    container_name: "originaldata_6.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  timertask:
+    image: 10.253.254.36/yuncetest/timertask:2.0
+    restart: always
+    container_name: "timertask.0"
+    volumes: 
+     - /home/app/logs:/logs
+    network_mode: "host"
+  

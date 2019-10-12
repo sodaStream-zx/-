@@ -1,0 +1,25 @@
+查看状态:
+systemctl status firewalld
+
+开启防火墙并设置自启：
+systemctl start firewalld
+systemctl enable firewalld
+
+开启指定端口 并设置永久生效
+firewall-cmd --zone=public --add-port=38080/tcp --permanent(永久生效)
+
+关闭指定端口：
+firewall-cmd --zone=public --remove-port=22/tcp --permanent
+
+重载防火墙：
+firewall-cmd --reload
+
+查看已开启的端口
+firewall-cmd --zone=public --list-ports
+
+批量开放或限制端口：
+firewall-cmd --zone=public --add-port=100-500/tcp --permanent
+
+
+查看规则限制
+firewall-cmd --zone=public --list-rich-rules

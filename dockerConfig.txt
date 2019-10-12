@@ -1,0 +1,8 @@
+{
+#加速镜像
+"registry-mirrors": [
+"http://hub-mirror.c.163.com",
+"http://hub-mirror.c.163.com"
+],
+"dns": ["8.8.8.8","8.8.4.4"]
+}

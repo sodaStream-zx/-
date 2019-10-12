@@ -1,0 +1,6 @@
+###确保 /usr/local/bin/ 目录存在，不存在则创建 mkdir /usr/local/bin/
+curl -L https://github.com/docker/compose/releases/download/1.23.0-rc3/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+####提供可执行权限
+chmod +x /usr/local/bin/docker-compose
+##查看版本
+docker-compose version

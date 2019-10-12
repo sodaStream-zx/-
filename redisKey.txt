@@ -1,0 +1,24 @@
+
+肖昌贵 2019/5/14 星期二 13:48:51
+redis key 规则：
+ vip进度条规则：vipProgess
+ 用户进度条规则： user-progress
+ 用户计数器：realId-dataMap
+ 测试计数器:userId:当前年月 1:201904
+ 进度条规则:realId-isVip-time  1-1-254897613164
+ 超时记录：timeOutMap realId:相同任务ids
+
+数据同步到es，每次记录从数据库中查到的最大数据id：正式环境下是：FORMA_DATA_TASK_ES   测试环境下是：yunce_original
+
+
+
+评测结果：
+
+主体数据：realId + ":" + MasterData
+一级页面：realId + ":" + OneLevel
+一级页面新闻：realId + ":" + 标签 + ":" + "正面"/"负面" + ":" + OneLevel
+二级页面标签：realId + ":" + "正面"/"负面" + ":" + TWOLEVEL
+二级页面新闻：realId + ":" + 标签 + ":" + "正面"/"负面"+ ":" + TWOLEVEL
+二级页面全部新闻：realId + ":" + "全部" + ":" + "正面"/"负面"+ ":" + TWOLEVEL
+相关搜索：RELATEDSEARCH + ":" + userId
+相关搜索删除：RELATEDSEARCHDELETE + ":" + userId

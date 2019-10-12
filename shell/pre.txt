@@ -1,0 +1,47 @@
+#!/bin/bash
+set -o errexit
+# 脚本功能：在构建前删除Harbor仓库相同版本的镜像
+
+# 变量:镜像名
+image="zzpay"
+
+# 自变量:项目名
+project=$(cat /root/.jenkins/workspace/yunce_$image/yunce-cloud/yunce-cloud-$image/pom.xml|grep "[[:space:]]<image.name>10.253.254.36"|awk -F "/" '{print $2}')
+echo "项目名:" $project
+echo "镜像名:" $image
+
+# 对比pom中项目名与构建时选择的项目名,相同则继续构建,不同则退出本次构建。
+echo "选择的项目名:" $pjenv
+echo ""
+
+if [ "$project" = "$pjenv" ]
+then
+echo "pom项目与所选项目匹配,开始构建……"
+# 本地镜像版本号
+version=$(cat /root/.jenkins/workspace/yunce_$image/yunce-cloud/yunce-cloud-$image/pom.xml|grep "$project/$image"|awk -F ":" '{print $2}'|awk -F "<" '{print $1}')
+echo "本地镜像版本:" $version
+
+# 仓库镜像版本号(可能是一个数组)
+result=$(ssh root@10.253.254.36 'curl -s -u "admin:Harbor12345" -X GET -H "Content-Type: application/json" "http://10.253.254.36/api/repositories/'"$project/$image"'/tags/"|grep "name"|awk -F "\"" \{print\ \$4\}')
+echo "仓库镜像版本:" $result
+
+# 删除仓库与本地版本号相同的镜像
+    if [ -n "$result" ]
+    then
+        for storVersion in $result
+        do
+          if [ "$version" = "$storVersion" ]
+          then
+              echo "即将删除的仓库镜像版本:" $storVersion
+              ssh root@10.253.254.36 'curl -u "admin:Harbor12345" -X DELETE -H "Content-Type: application/json" \
+              "http://10.253.254.36/api/repositories/'"$project/$image"'/tags/'$storVersion'"'
+          fi
+        done
+    else
+        echo "仓库里没有找到$image镜像的相关版本,无须删除."
+    fi
+else
+    echo "与pom中的项目不匹配,中止本次构建."
+    exit 1
+fi
+

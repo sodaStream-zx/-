@@ -1,0 +1,32 @@
+docker pull 10.253.254.36/yunce/[name]:1.0
+docker run -d -v /home/app/logs:/logs --net=host --name [name] 10.253.254.36/yunce/[name]:1.0
+docker logs [name]
+
+#制作镜像  时区(设置环境变量)
+ENV TZ="Asia/Shanghai"
+RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+
+#停止并去除容器
+docker ps -a
+docker stop [name]
+docker rm [name]
+#去除镜像
+docker images
+docker rmi [IMAGE ID]
+
+
+10.253.90.69
+
+docker 开启远程api
+##找到环境变量文件 加入：
+DOCKER_OPTS='-H unix:///var/run/docker.sock -H 0.0.0.0:2375'
+
+##修改服务启动参数
+vi /usr/systemd/system/docker.service
+在 ExecStart 后面加入 $DOCKER_OPTS 注意用空格隔开
+###重新加载配置文件
+systemctl daemon-reload 
+##重启docker 
+systemctl restart docker
+###开启防火墙端口
+firewall-cmd --zone=public --add-port=2375/tcp --permanent
