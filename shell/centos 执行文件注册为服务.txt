@@ -1,0 +1,13 @@
+[Unit]
+Description=elasticsearch //描述
+[Service]
+User=es //用户
+LimitNOFILE=100000
+LimitNPROC=100000
+ExecStart=/usr/local/es/elasticsearch-7.4.0/bin/elasticsearch //执行程序路径
+[Install]
+WantedBy=multi-user.target
+
+位置 /etc/systemd/system/[服务名 如 a.service]
+systemctl enable [服务名]
+systemctl start/status/restart/stop [服务名]
