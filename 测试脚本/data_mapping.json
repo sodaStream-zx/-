@@ -1,4 +1,95 @@
 {
+	"settings" : {
+        "number_of_shards":6,
+        "number_of_replicas" : 2,
+        "refresh_interval":"30s"
+    },
+	"mappings": {
+		"data": {
+			"properties": {
+				"riskValue": {
+					"type": "double"
+				},
+				"warnLevel": {
+					"type": "keyword"
+				},
+				"author": {
+					"index": false,
+					"type": "text"
+				},
+				"forward": {
+					"index": false,
+					"type": "integer"
+				},
+				"publishDate": {
+					"format": "yyyy-MM-dd HH:mm:ss",
+					"boost": 4,
+					"type": "date"
+				},
+				"zanTotal": {
+					"index": false,
+					"type": "integer"
+				},
+				"title": {
+					"analyzer": "ik_smart",
+					"boost": 4,
+					"type": "text"
+				},
+				"type": {
+					"type": "keyword"
+				},
+				"click": {
+					"index": false,
+					"type": "integer"
+				},
+				"content": {
+					"analyzer": "ik_smart",
+					"boost": 8,
+					"type": "text"
+				},
+				"url": {
+					"type": "text"
+				},
+				"warn": {
+					"type": "integer"
+				},
+				"repeatTotal": {
+					"index": false,
+					"type": "integer"
+				},
+				"appraise": {
+					"type": "keyword"
+				},
+				"warnLabel": {
+					"type": "keyword"
+				},
+				"typeLabel": {
+					"type": "keyword"
+				},
+				"id": {
+					"type": "long"
+				},
+				"sourceName": {
+					"type": "text"
+				},
+				"searchKeys": {
+					"type": "nested",
+					"properties": {
+						"read": {
+							"type": "integer"
+						},
+						"id": {
+							"type": "long"
+						},
+						"searchKey": {
+							"type": "text"
+						}
+					}
+				}
+			}
+		}
+	}
+}{
 	"mappings": {
 		"data": {
 			"properties": {
