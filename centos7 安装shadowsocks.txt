@@ -1,0 +1,70 @@
+# 安装 python python-pip
+ yum install python python-pip
+ pip install --upgrade pip
+# 安装 shadowsocks
+ pip install shadowsocks
+# 新建配置文件 路径可换 /etc/shadowsocks.json
+  #### 单用户：
+	{
+      "server":"0.0.0.0",
+      "server_port":2082,
+      "local_port":1080,
+      "password":"yourpass",
+      "timeout":600,
+      "method":"rc4-md5"
+	}
+  #### 多用户版本
+{
+    "server":"0.0.0.0",
+    "local_port":1080,
+    "port_password":{
+         "8989":"password0",
+         "9001":"password1",
+         "9002":"password2",
+         "9003":"password3",
+         "9004":"password4"
+    },
+    "timeout":300,
+    "method":"aes-256-cfb",
+}
+
+method为加密方法，可选aes-128-cfb, aes-192-cfb, aes-256-cfb, bf-cfb, cast5-cfb, des-cfb, rc4-md5, chacha20, salsa20, rc4, table
+server_port 为服务监听端口， 这个需要在 vultr或者服务器管理界面开启
+port_password 为多用户的时候，配置的 port: pass 的json串
+
+# 新建启动脚本文件/etc/systemd/system/shadowsocks.service
+
+[Unit]
+Description=Shadowsocks
+
+[Service]
+TimeoutStartSec=0
+ExecStart=/usr/bin/ssserver -c /etc/shadowsocks.json  ##配置文件绝对路径
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl enable shadowsocks  # 启用服务
+systemctl start shadowsocks   # 启动服务
+systemctl stop shadowsocks   # 停止服务
+
+ 如果使用多用户的模式，有可能无法使用 system 来启动，可以使用下面的命令来启动
+
+/usr/bin/ssserver -c /etc/shadowsocks.json -d start # 启动
+/usr/bin/ssserver -c /etc/shadowsocks.json -d stop  # 停止
+
+
+
+
+#########################################################################################
+### 安装BBR加速    需要内核4.9及以上版本，可使用uname -r查看  安装完后重启服务器
+
+wget --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh
+sh ./bbr.sh
+
+执行 sysctl net.ipv4.tcp_available_congestion_control ， 查看是否返回  net.ipv4.tcp_available_congestion_control = reno cubic bbr
+
+执行sysctl net.core.default_qdisc ， 查看是否返回  net.core.default_qdisc = fq
+
+执行 lsmod | grep bbr， 返回值有tcp_bbr 即已启动
+#########################################################################################
