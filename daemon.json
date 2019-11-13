@@ -1,0 +1,13 @@
+{"registry-mirrors": [
+     "https://knmzm2c6.mirror.aliyuncs.com"
+   ],
+    "graph": "/data/docker",
+
+   "insecure-registries": [
+      "10.253.254.36"
+   ],
+
+   "experimental": false,
+   "log-driver": "json-file",
+   "log-opts":{"max-size":"50m", "max-file":"3"}
+}
