@@ -1,0 +1,62 @@
+###maven /setting.xml
+<servers>
+    <server>
+    	<id>dockerHub</id>
+    	<username>zxxfreedocker</username>
+    	<password>a19940514</password>
+    	<configuration>
+      	<email>1139835238@qq.com</email>
+    	</configuration>
+  	</server>
+</servers>
+
+###pom.xml
+ <build>
+        <finalName>zxxLearn</finalName>
+        <plugins>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.4.12</version>
+                <executions>
+                    <execution>
+                        <id>build-image</id>
+                        <phase>install</phase> <!--相当于绑定到install命令-->
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>package-push</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>push</goal>    <!--相当于docker的push命令-->
+                        </goals>
+                        <configuration>
+                            <imageName>${image.name}</imageName>  <!--要push的镜像名-->
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- 注意imageName一定要是符合正则[a-z0-9-_.]的，否则构建不会成功 -->
+                    <!-- 详见：https://github.com/spotify/docker-maven-plugin    Invalid repository name ... only [a-z0-9-_.] are allowed-->
+                    <imageName>${image.name}</imageName>
+                    <!-- 指定Dockerfile所在的路径 -->
+                    <dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
+                    <!-- dockerdaemon服务器地址解决Connect to localhost:2375的问题的其中一种方式，注意要跟docker-machine env相一致 -->
+                    <dockerHost>http://62.234.211.179:2375</dockerHost>
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>
+                    <!-- 与maven配置文件settings.xml一致 -->
+                    <serverId>dockerHub</serverId>
+<!--                    <serverId>Harbor</serverId>-->
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>

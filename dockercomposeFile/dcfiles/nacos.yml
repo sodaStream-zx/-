@@ -1,0 +1,12 @@
+version: '3'
+services:
+  nacos:
+    image: zxxfreedocker/nacos:1.2.1
+    restart: always
+    container_name: "nacos_121"
+    volumes: 
+     - /home/zxx/nacos/vol/conf/:/nacos/conf
+     - /home/zxx/nacos/vol/target/:/nacos/target
+     - /home/zxx/nacos/vol/logs/:/nacos/logs
+    network_mode: "host" 
+
