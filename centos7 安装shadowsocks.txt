@@ -74,3 +74,4 @@ sh ./bbr.sh
 
 
 wget --no-check-certificate http://www.vvso.cn/sh/ssr/shadowsocksR.sh; bash shadowsocksR.sh 
+wget --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh && chmod +x bbr.sh && ./bbr.sh
