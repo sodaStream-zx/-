@@ -1,0 +1,15 @@
+####安装
+bash <(curl -sL https://raw.githubusercontent.com/hijkpw/scripts/master/centos_install_v2ray.sh)
+
+######查看状态
+bash <(curl -sL https://raw.githubusercontent.com/hijkpw/scripts/master/centos_install_v2ray.sh) info
+
+启动
+v2ray管理命令：启动：systemctl start v2ray，停止：systemctl stop v2ray，重启：systemctl restart v2ray
+
+卸载
+bash <(curl -sL https://raw.githubusercontent.com/hijkpw/scripts/master/centos_install_v2ray.sh) uninstall
+
+
+加速
+bash <(curl -sL https://raw.githubusercontent.com/hijkpw/scripts/master/centos_install_v2ray.sh)
